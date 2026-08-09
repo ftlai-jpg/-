@@ -44,14 +44,15 @@
     html { scroll-behavior: smooth; }
     #tools, #about { scroll-margin-top: 76px; }
 
-    /* 自定义背景图片：半透明白遮罩保证内容可读，整页固定铺满 */
+    /* 自定义背景图片：半透明白遮罩保证内容可读，整页固定铺满
+       --bg-overlay / --bg-position 由 JS 按所选背景动态设置 */
     body.has-photo {
       background-color: #eef2f6;
       background-image:
-        linear-gradient(rgba(255,255,255,0.55), rgba(255,255,255,0.55)),
+        linear-gradient(rgba(255,255,255,var(--bg-overlay,0.55)), rgba(255,255,255,var(--bg-overlay,0.55))),
         var(--bg-photo, none);
       background-size: cover;
-      background-position: center;
+      background-position: var(--bg-position, center);
       background-attachment: fixed;
       background-repeat: no-repeat;
     }
@@ -1155,23 +1156,23 @@
     /* 左侧选工具 → 右侧跟随高亮（柔和动画） */
     @keyframes toolSelectPulse {
       0%   { transform: scale(1);     box-shadow: 0 0 0 0 rgba(30,136,229,0); }
-      45%  { transform: scale(1.02);  box-shadow: 0 0 0 6px rgba(30,136,229,.22); }
+      45%  { transform: scale(1.012); box-shadow: 0 0 0 5px rgba(30,136,229,.20); }
       100% { transform: scale(1);     box-shadow: 0 0 0 3px var(--primary-light), var(--shadow-lg); }
     }
     @keyframes idxSelectPulse {
       0%   { transform: scale(1); }
-      50%  { transform: scale(1.04); }
+      50%  { transform: scale(1.022); }
       100% { transform: scale(1); }
     }
     .tool-card { scroll-margin-top: 88px; }
     .tool-card.selected {
       box-shadow: 0 0 0 3px var(--primary-light), var(--shadow-lg);
-      animation: toolSelectPulse .85s cubic-bezier(.22, 1, .36, 1);
+      animation: toolSelectPulse 1.2s cubic-bezier(.22, 1, .36, 1);
     }
     .idx-item { transition: background .28s ease, color .28s ease; }
     .idx-item.active {
       background: var(--primary); color: #fff;
-      animation: idxSelectPulse .65s cubic-bezier(.22, 1, .36, 1);
+      animation: idxSelectPulse 1s cubic-bezier(.22, 1, .36, 1);
     }
     .idx-item.active .idx-item-icon { filter: brightness(1.5); }
 
@@ -2385,6 +2386,25 @@ function renderTools() {
 }
 
 // 左侧选工具 → 右侧跟随定位 + 高亮
+// 自定义缓动滚动：比原生 smooth 更慢更可控，让卡片明显「滑」到中间
+function followScrollTo(el, duration) {
+  const container = el.closest('.main') || document.scrollingElement || document.documentElement;
+  const cRect = container.getBoundingClientRect();
+  const tRect = el.getBoundingClientRect();
+  const start = container.scrollTop;
+  const end = Math.max(0, start + (tRect.top - cRect.top) - (cRect.height - tRect.height) / 2);
+  const delta = end - start;
+  if (Math.abs(delta) < 2) return;
+  const startTime = performance.now();
+  function step(now) {
+    const t = Math.min(1, (now - startTime) / duration);
+    const e = t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2; // easeInOutCubic
+    container.scrollTop = start + delta * e;
+    if (t < 1) requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
+}
+
 function selectTool(id) {
   const tool = getToolById(id);
   // 若当前筛选把该工具挡住，先切回「全部」确保右侧可见
@@ -2396,7 +2416,7 @@ function selectTool(id) {
   if (!el) return;
   document.querySelectorAll('.tool-card.selected').forEach(c => c.classList.remove('selected'));
   el.classList.add('selected');
-  el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  followScrollTo(el, 720);
   // 左侧索引同步高亮
   document.querySelectorAll('.idx-item.active').forEach(c => c.classList.remove('active'));
   const idx = document.getElementById('idx-' + id);
@@ -2806,9 +2826,10 @@ function applyAppearance() {
 
 // ===== 背景图片 =====
 // 提供两套内置背景，用户可在设置面板切换，存储在 localStorage 的 wb_bg 中
+// overlay: 白色遮罩浓度（越小图片越清晰）；position: 竖图裁剪时主体落点
 const BG_OPTIONS = {
-  bg1: { file: 'assets/bg1.jpg', label: '活力橙（图案）' },
-  bg2: { file: 'assets/bg2.jpg', label: '蓝天白云（照片）' },
+  bg1: { file: 'assets/bg1.jpg', label: '活力橙（图案）', overlay: 0.55, position: 'center' },
+  bg2: { file: 'assets/bg2.jpg', label: '蓝天白云（照片）', overlay: 0.32, position: 'center bottom' },
 };
 
 function applyBackground() {
@@ -2822,6 +2843,8 @@ function applyBackground() {
   }
   const bg = BG_OPTIONS[key];
   root.style.setProperty('--bg-photo', 'url("' + bg.file + '")');
+  root.style.setProperty('--bg-overlay', bg.overlay);
+  root.style.setProperty('--bg-position', bg.position);
   body.classList.add('has-photo');
 }
 
