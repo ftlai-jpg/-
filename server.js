@@ -40,6 +40,9 @@ const MIME = {
   '.json': 'application/json; charset=utf-8',
   '.svg':  'image/svg+xml',
   '.ico':  'image/x-icon',
+  '.png':  'image/png',
+  '.jpg':  'image/jpeg',
+  '.jpeg': 'image/jpeg',
 };
 
 // —— 工具方法论（机密，仅存于服务端，不进前端）——
