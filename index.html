@@ -853,6 +853,25 @@
     .view-stat { margin-top: 10px; font-size: 13px; color: var(--text-muted); letter-spacing: .3px; }
     .view-stat #viewCounter { display: inline-flex; align-items: center; gap: 4px; }
 
+    /* 左侧栏底部：网站访问统计面板 */
+    .sidebar-stats {
+      margin-top: 14px; padding: 12px 14px; border-radius: var(--radius-md);
+      background: linear-gradient(135deg, var(--primary-bg), #fff);
+      border: 1px solid var(--border-light);
+    }
+    .sidebar-stats-title { font-size: 12px; font-weight: 600; color: var(--primary); margin-bottom: 8px; }
+    .sidebar-stats-grid { display: flex; gap: 10px; }
+    .ss-item {
+      flex: 1; text-align: center; background: #fff; border-radius: var(--radius-sm);
+      padding: 8px 4px; border: 1px solid var(--border-light);
+    }
+    .ss-num {
+      font-size: 20px; font-weight: 700; color: var(--text); line-height: 1.1;
+      font-variant-numeric: tabular-nums; transition: transform .12s cubic-bezier(0.4,0,0.2,1);
+    }
+    .ss-num.bump { transform: scale(1.18); color: var(--primary); }
+    .ss-label { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+
     /* ===== Header Settings Button ===== */
     .header-settings-btn {
       width: 36px;
@@ -1190,6 +1209,13 @@
   <aside class="sidebar" id="sidebar">
     <div class="sidebar-title">📑 工具索引</div>
     <div class="tool-index" id="toolIndex"></div>
+    <div class="sidebar-stats" id="sidebarStats">
+      <div class="sidebar-stats-title">📊 网站访问统计</div>
+      <div class="sidebar-stats-grid">
+        <div class="ss-item"><div class="ss-num" id="statTotal">—</div><div class="ss-label">总访问</div></div>
+        <div class="ss-item"><div class="ss-num" id="statToday">—</div><div class="ss-label">今日</div></div>
+      </div>
+    </div>
   </aside>
 
   <main class="main" id="tools">
@@ -3212,20 +3238,28 @@ function renderMarkdown(md) {
 function init() { applyAppearance(); applyBackground(); renderFilterTabs(); renderTools(); renderIndex(); updateSectionTitle(); updateSettingsButton(); }
 init();
 
-// —— 浏览量统计（会话级去重：同一标签页只上报一次，避免刷新刷爆）——
+// —— 浏览量统计 ——
+// 每次加载先 GET /api/stats 填充（不计数，刷新也显示真实值）；
+// 再用 POST /api/track 计数（会话级去重，避免刷新刷爆），并更新面板。
 (function () {
+  function fill(d, animate) {
+    if (!d || typeof d.total !== 'number') return;
+    const vc = document.getElementById('viewCounter');
+    if (vc) vc.textContent = '👁 总访问 ' + d.total + ' 次 · 今日 ' + d.today + ' 次';
+    const t = document.getElementById('statTotal');
+    const td = document.getElementById('statToday');
+    if (t) { if (animate) { t.classList.add('bump'); setTimeout(() => t.classList.remove('bump'), 200); } t.textContent = d.total; }
+    if (td) { if (animate) { td.classList.add('bump'); setTimeout(() => td.classList.remove('bump'), 200); } td.textContent = d.today; }
+  }
   try {
-    if (sessionStorage.getItem('wb_view_tracked')) return;
-    sessionStorage.setItem('wb_view_tracked', '1');
-    fetch('/api/track', { method: 'POST' })
-      .then(r => r.json())
-      .then(d => {
-        const el = document.getElementById('viewCounter');
-        if (el && d && typeof d.total === 'number') {
-          el.textContent = '👁 总访问 ' + d.total + ' 次 · 今日 ' + d.today + ' 次';
-        }
-      })
-      .catch(() => {});
+    fetch('/api/stats').then(r => r.json()).then(d => fill(d, false)).catch(() => {});
+    if (!sessionStorage.getItem('wb_view_tracked')) {
+      sessionStorage.setItem('wb_view_tracked', '1');
+      fetch('/api/track', { method: 'POST' })
+        .then(r => r.json())
+        .then(d => fill(d, true))
+        .catch(() => {});
+    }
   } catch (e) {}
 })();
 </script>
