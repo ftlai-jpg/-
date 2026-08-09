@@ -2396,19 +2396,43 @@ function renderTools() {
 
 // 左侧选工具 → 右侧跟随定位 + 高亮
 // 自定义缓动滚动：比原生 smooth 更慢更可控，让卡片明显「滑」到中间
+// 自动判断真正的滚动容器：向上找最近的可滚动祖先（排除左侧栏自身），
+// 找不到则说明是整页(window)滚动。这样无论布局如何都能正确「跟随」。
+function getScrollContainer(el) {
+  let node = el.parentElement;
+  while (node && node.nodeType === 1 && node !== document.body) {
+    const oy = getComputedStyle(node).overflowY;
+    const canScroll = (oy === 'auto' || oy === 'scroll') && node.scrollHeight > node.clientHeight + 1;
+    if (canScroll && !node.classList.contains('sidebar')) return node;
+    node = node.parentElement;
+  }
+  return null; // 整页滚动
+}
+
 function followScrollTo(el, duration) {
-  const container = el.closest('.main') || document.scrollingElement || document.documentElement;
-  const cRect = container.getBoundingClientRect();
-  const tRect = el.getBoundingClientRect();
-  const start = container.scrollTop;
-  const end = Math.max(0, start + (tRect.top - cRect.top) - (cRect.height - tRect.height) / 2);
+  const box = getScrollContainer(el);
+  let getScroll, setScroll, start, end;
+  if (box) {
+    getScroll = () => box.scrollTop;
+    setScroll = v => { box.scrollTop = v; };
+    const cRect = box.getBoundingClientRect();
+    const tRect = el.getBoundingClientRect();
+    start = box.scrollTop;
+    end = Math.max(0, start + (tRect.top - cRect.top) - (cRect.height - tRect.height) / 2);
+  } else {
+    getScroll = () => window.scrollY || document.documentElement.scrollTop || 0;
+    setScroll = v => window.scrollTo(0, v);
+    const tRect = el.getBoundingClientRect();
+    start = getScroll();
+    end = Math.max(0, start + tRect.top - (window.innerHeight - el.offsetHeight) / 2);
+  }
   const delta = end - start;
   if (Math.abs(delta) < 2) return;
   const startTime = performance.now();
   function step(now) {
     const t = Math.min(1, (now - startTime) / duration);
     const e = t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2; // easeInOutCubic
-    container.scrollTop = start + delta * e;
+    setScroll(start + delta * e);
     if (t < 1) requestAnimationFrame(step);
   }
   requestAnimationFrame(step);
