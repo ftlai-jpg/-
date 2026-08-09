@@ -2315,7 +2315,7 @@ function toolCardHtml(tool) {
   const cat = getCategoryById(tool.cat);
   const starred = isFavorited(tool.id) ? 'starred' : '';
   const badge = tool.hot ? '<span class="hot-badge">🔥热门</span>' : '';
-  return '<div class="tool-card" style="--cat-color:' + cat.color + ';--cat-bg:' + cat.bg + '" onclick="openTool(\'' + tool.id + '\')">' + badge +
+  return '<div class="tool-card" id="tool-' + tool.id + '" style="--cat-color:' + cat.color + ';--cat-bg:' + cat.bg + '" onclick="selectTool(\'' + tool.id + '\');openTool(\'' + tool.id + '\')">' + badge +
     '<div class="tool-card-header"><div class="tool-icon" style="background:' + cat.bg + '">' + tool.icon + '</div><div class="tool-info"><div class="tool-name">' + tool.name + '</div><div class="tool-tags">' + tool.tags + '</div></div></div>' +
     '<div class="tool-desc">' + tool.desc + '</div>' +
     '<div class="tool-footer"><span class="tool-cat-label" style="color:' + cat.color + ';background:' + cat.bg + '">' + cat.name + '</span>' +
@@ -2350,6 +2350,25 @@ function renderTools() {
   updateToolCount();
 }
 
+// 左侧选工具 → 右侧跟随定位 + 高亮
+function selectTool(id) {
+  const tool = getToolById(id);
+  // 若当前筛选把该工具挡住，先切回「全部」确保右侧可见
+  if (tool && state.currentCategory !== 'all' && state.currentCategory !== tool.cat && state.currentCategory !== 'fav') {
+    state.currentCategory = 'all';
+    renderFilterTabs(); renderTools();
+  }
+  const el = document.getElementById('tool-' + id);
+  if (!el) return;
+  document.querySelectorAll('.tool-card.selected').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+  el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  // 左侧索引同步高亮
+  document.querySelectorAll('.idx-item.active').forEach(c => c.classList.remove('active'));
+  const idx = document.getElementById('idx-' + id);
+  if (idx) idx.classList.add('active');
+}
+
 // 左侧可折叠索引（手风琴）
 function renderIndex() {
   const container = document.getElementById('toolIndex');
@@ -2366,7 +2385,7 @@ function renderIndex() {
         '<span class="idx-count">' + inCat.length + '</span>' +
       '</div><div class="idx-body">';
     inCat.forEach(t => {
-      html += '<div class="idx-item" onclick="openTool(\'' + t.id + '\')">' +
+      html += '<div class="idx-item" id="idx-' + t.id + '" onclick="selectTool(\'' + t.id + '\')">' +
         '<span class="idx-item-icon">' + t.icon + '</span>' +
         '<span class="idx-item-name">' + t.name + (t.hot ? ' 🔥' : '') + '</span></div>';
     });
@@ -2384,7 +2403,7 @@ function renderIndex() {
       '</div><div class="idx-body">';
     state.favorites.forEach(id => {
       const t = getToolById(id); if (!t) return;
-      html += '<div class="idx-item" onclick="openTool(\'' + t.id + '\')">' +
+      html += '<div class="idx-item" id="idx-' + t.id + '" onclick="selectTool(\'' + t.id + '\')">' +
         '<span class="idx-item-icon">' + t.icon + '</span>' +
         '<span class="idx-item-name">' + t.name + '</span></div>';
     });
