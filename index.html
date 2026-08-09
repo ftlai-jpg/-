@@ -1337,7 +1337,7 @@
           <select class="form-select" id="pageBgSelect" onchange="applyBackgroundFromUI()">
             <option value="bg1">活力橙（图案）</option>
             <option value="bg2">蓝天白云（照片）</option>
-            <option value="">纯色背景</option>
+            <option value="aurora">极光</option>
           </select>
         </div>
       </div>
@@ -2830,6 +2830,7 @@ function applyAppearance() {
 const BG_OPTIONS = {
   bg1: { file: 'assets/bg1.jpg', label: '活力橙（图案）', overlay: 0.55, position: 'center' },
   bg2: { file: 'assets/bg2.jpg', label: '蓝天白云（照片）', overlay: 0.46, position: 'center bottom' },
+  aurora: { file: 'bg-aurora-3.jpg', label: '极光', overlay: 0.5, position: 'center' },
 };
 
 function applyBackground() {
