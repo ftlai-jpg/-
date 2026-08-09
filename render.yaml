@@ -1,0 +1,34 @@
+# Render Blueprint 配置 —— 一键部署「跟着肯尼学英语」AI 工作台
+# 部署方式：在 Render 后台 New → Blueprint → 上传/连接本仓库，即按此文件自动创建 Web 服务。
+services:
+  - type: web
+    name: ai-teaching-workbench
+    runtime: node
+    plan: free
+    region: oregon          # 可选：singapore / oregon / frankfurt
+    buildCommand: "echo 'no build needed'"
+    startCommand: "node server.js"
+    healthCheckPath: "/"
+    envVars:
+      - key: PORT
+        sync: false
+      # ↓↓↓ 在这里填你的 AI 密钥（也可部署后再在 Render 后台 Environment 里填）↓↓↓
+      # 只需填你打算用的服务商；不填的服务商在前端选了会提示“服务器未配置密钥”
+      - key: SENSENOVA_KEY          # 商汤日日新（大装置）SenseChat-5
+        sync: false
+      - key: SENSENOVA_TOKEN_KEY    # 商汤 Token（开放平台）sensenova-6.7-flash-lite
+        sync: false
+      - key: DEEPSEEK_KEY           # DeepSeek
+        sync: false
+      - key: OPENROUTER_KEY         # OpenRouter（一个 Key 用几百种模型）
+        sync: false
+      - key: GEMINI_KEY             # Google Gemini
+        sync: false
+      - key: OPENAI_KEY             # OpenAI
+        sync: false
+      - key: MOONSHOT_KEY           # Moonshot
+        sync: false
+      - key: QWEN_KEY               # 通义千问
+        sync: false
+      - key: GLM_KEY                # 智谱 GLM
+        sync: false

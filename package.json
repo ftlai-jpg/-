@@ -1,0 +1,13 @@
+{
+  "name": "ai-teaching-workbench",
+  "version": "1.0.0",
+  "description": "跟着肯尼学英语 · AI 教学工作台（云端代理 + 静态托管，零依赖）",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "license": "MIT"
+}

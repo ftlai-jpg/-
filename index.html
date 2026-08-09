@@ -1,0 +1,3081 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>跟着肯尼学英语 · 智能教育工具集</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    /* ===== CSS Reset & Variables ===== */
+    :root {
+      --primary: #1565C0;
+      --primary-light: #1E88E5;
+      --primary-dark: #0D47A1;
+      --primary-bg: #E3F2FD;
+      --accent: #F0A030;
+      --accent-light: #FFD180;
+      --bg: #F7F8FA;
+      --surface: #FFFFFF;
+      --text: #1A1A2E;
+      --text-secondary: #5C5C7A;
+      --text-muted: #9E9EB2;
+      --border: #E5E5EC;
+      --border-light: #F0F0F5;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
+      --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
+      --shadow-lg: 0 8px 32px rgba(0,0,0,0.12);
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 16px;
+      --radius-xl: 24px;
+      --transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Noto Sans SC', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* 自定义背景图片：半透明白遮罩保证内容可读，整页固定铺满 */
+    body.has-photo {
+      background-color: #eef2f6;
+      background-image:
+        linear-gradient(rgba(255,255,255,0.55), rgba(255,255,255,0.55)),
+        var(--bg-photo, none);
+      background-size: cover;
+      background-position: center;
+      background-attachment: fixed;
+      background-repeat: no-repeat;
+    }
+
+    a { text-decoration: none; color: inherit; }
+    button { font-family: inherit; cursor: pointer; border: none; background: none; }
+    input, textarea { font-family: inherit; }
+
+    /* ===== Header ===== */
+    .header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(255,255,255,0.92);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      padding: 0 24px;
+      height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--primary);
+    }
+
+    .logo-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      background: transparent;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+    .logo-icon img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+
+    .header-nav {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .header-nav a {
+      padding: 8px 16px;
+      border-radius: var(--radius-sm);
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      transition: var(--transition);
+    }
+
+    .header-nav a:hover {
+      background: var(--primary-bg);
+      color: var(--primary);
+    }
+
+    .header-nav a.active {
+      background: var(--primary-bg);
+      color: var(--primary);
+    }
+
+    /* ===== Hero Section ===== */
+    .hero {
+      background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 50%, var(--primary-light) 100%);
+      padding: 60px 24px 80px;
+      text-align: center;
+      color: white;
+      position: relative;
+      overflow: hidden;
+    }
+    /* 设置背景图片后，hero 透出整页英语主题照片，文字转深色保证可读 */
+    body.has-photo .hero {
+      background: linear-gradient(135deg, rgba(255,255,255,0.42), rgba(255,255,255,0.28));
+      color: var(--text);
+    }
+    body.has-photo .hero h1 { color: var(--primary-dark); }
+    body.has-photo .hero p { color: var(--text-secondary); opacity: 1; }
+    .hero-cta {
+      display: inline-block;
+      margin-top: 28px;
+      padding: 12px 26px;
+      border-radius: 999px;
+      background: var(--primary);
+      color: #fff;
+      font-weight: 600;
+      font-size: 15px;
+      box-shadow: var(--shadow-md);
+      transition: var(--transition);
+    }
+    body.has-photo .hero .hero-cta { background: var(--primary); color: #fff; }
+    .hero-cta:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
+
+    .hero::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      right: -10%;
+      width: 500px;
+      height: 500px;
+      background: radial-gradient(circle, rgba(255,255,255,0.08) 0%, transparent 70%);
+      border-radius: 50%;
+    }
+
+    .hero::after {
+      content: '';
+      position: absolute;
+      bottom: -30%;
+      left: -10%;
+      width: 400px;
+      height: 400px;
+      background: radial-gradient(circle, rgba(240,160,48,0.1) 0%, transparent 70%);
+      border-radius: 50%;
+    }
+
+    .hero-content {
+      position: relative;
+      z-index: 1;
+      max-width: 720px;
+      margin: 0 auto;
+    }
+
+    .hero h1 {
+      font-size: 36px;
+      font-weight: 700;
+      margin-bottom: 12px;
+      letter-spacing: 1px;
+    }
+
+    .hero p {
+      font-size: 16px;
+      opacity: 0.85;
+      margin-bottom: 40px;
+    }
+
+    /* ===== Layout: left index + main ===== */
+    .app-shell {
+      display: flex;
+      align-items: flex-start;
+      gap: 24px;
+      max-width: 1320px;
+      margin: -40px auto 0;
+      padding: 0 24px 60px;
+      position: relative;
+      z-index: 2;
+    }
+
+    .sidebar {
+      flex: 0 0 300px;
+      width: 300px;
+      position: sticky;
+      top: 84px;
+      max-height: calc(100vh - 104px);
+      overflow-y: auto;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-md);
+      padding: 16px;
+    }
+
+    .sidebar-title {
+      font-size: 13px; font-weight: 700; color: var(--text-secondary);
+      margin: 0 4px 10px;
+    }
+
+    /* 可折叠索引（手风琴） */
+    .idx-group { margin-bottom: 2px; }
+    .idx-header {
+      display: flex; align-items: center; gap: 8px;
+      padding: 8px 10px; border-radius: var(--radius-sm);
+      cursor: pointer; font-size: 14px; font-weight: 600; color: var(--text);
+      transition: var(--transition);
+    }
+    .idx-header:hover { background: var(--primary-bg); }
+    .idx-caret {
+      font-size: 10px; color: var(--text-muted);
+      transition: transform 0.2s ease; flex: none; width: 12px; text-align: center;
+    }
+    .idx-group.open .idx-caret { transform: rotate(90deg); }
+    .idx-dot { width: 8px; height: 8px; border-radius: 50%; flex: none; }
+    .idx-name { flex: 1; min-width: 0; }
+    .idx-count {
+      font-size: 12px; color: var(--text-muted); background: var(--border-light);
+      border-radius: 10px; padding: 0 8px; flex: none;
+    }
+    .idx-body { display: none; padding: 2px 0 6px; }
+    .idx-group.open .idx-body { display: block; }
+    .idx-item {
+      display: flex; align-items: center; gap: 8px;
+      padding: 6px 10px 6px 30px; border-radius: var(--radius-sm);
+      cursor: pointer; font-size: 13px; color: var(--text-secondary);
+      transition: var(--transition);
+    }
+    .idx-item:hover { background: var(--primary-bg); color: var(--primary); }
+    .idx-item-icon { font-size: 14px; flex: none; width: 18px; text-align: center; }
+    .idx-item-name { flex: 1; min-width: 0; }
+
+    .main {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .toolbar {
+      background: var(--surface);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-md);
+      padding: 20px 24px;
+      margin-bottom: 24px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .search-box {
+      flex: 1;
+      min-width: 200px;
+      position: relative;
+    }
+
+    .search-box input {
+      width: 100%;
+      height: 44px;
+      padding: 0 16px 0 44px;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-md);
+      font-size: 14px;
+      background: var(--bg);
+      transition: var(--transition);
+      outline: none;
+    }
+
+    .search-box input:focus {
+      border-color: var(--primary);
+      background: var(--surface);
+      box-shadow: 0 0 0 3px var(--primary-bg);
+    }
+
+    .search-icon {
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-muted);
+      font-size: 18px;
+    }
+
+    .filter-tabs {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 24px;
+    }
+
+    .filter-tab {
+      padding: 8px 18px;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      transition: var(--transition);
+      white-space: nowrap;
+    }
+
+    .filter-tab:hover {
+      border-color: var(--primary-light);
+      color: var(--primary);
+    }
+
+    .filter-tab.active {
+      background: var(--primary);
+      color: white;
+      border-color: var(--primary);
+    }
+
+    .filter-tab .count {
+      margin-left: 4px;
+      font-size: 12px;
+      opacity: 0.7;
+    }
+
+    /* ===== Tool Grid ===== */
+    .section-title {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .section-title .badge {
+      font-size: 13px;
+      font-weight: 400;
+      color: var(--text-muted);
+    }
+
+    .tool-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 16px;
+      margin-bottom: 40px;
+    }
+
+    /* 分组标题（按类别排序时显示） */
+    .cat-group-header {
+      grid-column: 1 / -1;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text);
+      margin: 12px 0 2px;
+      padding-bottom: 6px;
+      border-bottom: 2px solid var(--cat-color, var(--primary));
+    }
+    .cat-group-header .cat-dot {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      background: var(--cat-color, var(--primary));
+      flex: none;
+    }
+    .cat-group-header .cat-count {
+      font-size: 12px;
+      font-weight: 400;
+      color: var(--text-secondary);
+      background: var(--cat-bg, var(--primary-bg));
+      padding: 1px 9px;
+      border-radius: 10px;
+    }
+
+    .tool-card {
+      background: var(--surface);
+      border: 1.5px solid var(--border-light);
+      border-radius: var(--radius-lg);
+      padding: 20px;
+      cursor: pointer;
+      transition: var(--transition);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .tool-card:hover {
+      border-color: var(--primary-light);
+      box-shadow: var(--shadow-md);
+      transform: translateY(-2px);
+    }
+
+    .tool-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: var(--cat-color, var(--primary));
+      opacity: 0;
+      transition: var(--transition);
+    }
+
+    .tool-card:hover::before {
+      opacity: 1;
+    }
+
+    .tool-card-header {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      margin-bottom: 10px;
+    }
+
+    .tool-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      flex-shrink: 0;
+      background: var(--cat-bg, var(--primary-bg));
+    }
+
+    .tool-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .tool-name {
+      font-size: 15px;
+      font-weight: 600;
+      margin-bottom: 4px;
+      color: var(--text);
+    }
+
+    .tool-tags {
+      font-size: 12px;
+      color: var(--text-muted);
+      display: -webkit-box;
+      -webkit-line-clamp: 1;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .tool-desc {
+      font-size: 13px;
+      color: var(--text-secondary);
+      line-height: 1.5;
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      margin-bottom: 12px;
+    }
+
+    .tool-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .tool-cat-label {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--cat-color, var(--primary));
+      background: var(--cat-bg, var(--primary-bg));
+      padding: 3px 10px;
+      border-radius: 12px;
+    }
+
+    .tool-version {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .tool-star {
+      cursor: pointer;
+      font-size: 18px;
+      color: var(--text-muted);
+      transition: var(--transition);
+      user-select: none;
+    }
+
+    .tool-star:hover {
+      transform: scale(1.2);
+    }
+
+    .tool-star.starred {
+      color: var(--accent);
+    }
+
+    .tool-card .hot-badge {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      background: #FF4757;
+      color: white;
+      font-size: 10px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 8px;
+    }
+
+    .tool-card .new-badge {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      background: var(--primary);
+      color: white;
+      font-size: 10px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 8px;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--text-muted);
+    }
+
+    .empty-state .icon {
+      font-size: 48px;
+      margin-bottom: 16px;
+    }
+
+    /* ===== Modal ===== */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0,0,0,0.45);
+      backdrop-filter: blur(4px);
+      z-index: 1000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .modal-overlay.active {
+      display: flex;
+      animation: fadeIn 0.2s ease;
+    }
+
+    .modal {
+      background: var(--surface);
+      border-radius: var(--radius-xl);
+      width: 100%;
+      max-width: 720px;
+      max-height: 90vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      box-shadow: var(--shadow-lg);
+      animation: slideUp 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .modal-header {
+      padding: 24px 28px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .modal-header .tool-icon {
+      width: 48px;
+      height: 48px;
+      font-size: 24px;
+    }
+
+    .modal-header h2 {
+      font-size: 18px;
+      font-weight: 600;
+      flex: 1;
+    }
+
+    .modal-close {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      color: var(--text-muted);
+      transition: var(--transition);
+    }
+
+    .modal-close:hover {
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    .modal-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 24px 28px;
+    }
+
+    .modal-desc {
+      font-size: 14px;
+      color: var(--text-secondary);
+      line-height: 1.7;
+      margin-bottom: 20px;
+      padding: 16px;
+      background: var(--bg);
+      border-radius: var(--radius-md);
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-label {
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .form-label .required {
+      color: #FF4757;
+      font-size: 12px;
+    }
+
+    .form-input,
+    .form-textarea,
+    .form-select {
+      width: 100%;
+      padding: 12px 16px;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-md);
+      font-size: 14px;
+      background: var(--surface);
+      transition: var(--transition);
+      outline: none;
+    }
+
+    .form-input:focus,
+    .form-textarea:focus,
+    .form-select:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px var(--primary-bg);
+    }
+
+    .form-textarea {
+      min-height: 140px;
+      resize: vertical;
+      line-height: 1.6;
+    }
+
+    .form-hint {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 6px;
+    }
+
+    .modal-footer {
+      padding: 16px 28px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+    }
+
+    .btn {
+      padding: 10px 24px;
+      border-radius: var(--radius-md);
+      font-size: 14px;
+      font-weight: 600;
+      transition: var(--transition);
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: var(--primary-dark);
+      transform: translateY(-1px);
+      box-shadow: var(--shadow-md);
+    }
+
+    .btn-secondary {
+      background: var(--bg);
+      color: var(--text-secondary);
+    }
+
+    .btn-secondary:hover {
+      background: var(--border-light);
+    }
+
+    .result-area {
+      margin-top: 20px;
+      padding: 20px;
+      background: var(--bg);
+      border-radius: var(--radius-md);
+      border: 1.5px solid var(--border);
+      display: none;
+    }
+
+    .result-area.active {
+      display: block;
+      animation: fadeIn 0.3s ease;
+    }
+
+    .result-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+
+    .result-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--primary);
+    }
+
+    .result-content {
+      font-size: 14px;
+      line-height: 1.8;
+      color: var(--text);
+      white-space: pre-wrap;
+    }
+
+    .loading-dots {
+      display: inline-flex;
+      gap: 4px;
+    }
+
+    .loading-dots span {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--primary);
+      animation: bounce 1.4s infinite ease-in-out both;
+    }
+
+    .loading-dots span:nth-child(1) { animation-delay: -0.32s; }
+    .loading-dots span:nth-child(2) { animation-delay: -0.16s; }
+
+    /* ===== Footer ===== */
+    .footer {
+      text-align: center;
+      padding: 40px 24px;
+      color: var(--text-muted);
+      font-size: 13px;
+      border-top: 1px solid var(--border);
+    }
+
+    /* ===== 使用指南（Footer 内） ===== */
+    .guide-wrap {
+      max-width: 880px;
+      margin: 0 auto 24px;
+      padding: 30px 28px 26px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-sm);
+      text-align: left;
+    }
+    .guide-title {
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--primary-dark);
+      margin-bottom: 6px;
+    }
+    .guide-lead {
+      font-size: 14px;
+      color: var(--text-secondary);
+      margin-bottom: 20px;
+    }
+    .guide-steps {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .guide-step {
+      display: flex;
+      gap: 16px;
+      align-items: flex-start;
+    }
+    .guide-num {
+      flex: 0 0 38px;
+      width: 38px; height: 38px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--primary), var(--primary-light));
+      color: #fff;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 18px;
+    }
+    .guide-h { font-size: 16px; font-weight: 700; color: var(--text); margin-bottom: 2px; }
+    .guide-d { font-size: 14px; color: var(--text-secondary); line-height: 1.6; }
+    .guide-foot {
+      margin-top: 18px;
+      font-size: 13px;
+      color: var(--text-muted);
+      padding-top: 14px;
+      border-top: 1px dashed var(--border);
+    }
+    .footer-brand { margin-top: 18px; }
+
+    /* ===== Header Settings Button ===== */
+    .header-settings-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      transition: var(--transition);
+      margin-left: 8px;
+    }
+    .header-settings-btn:hover {
+      background: var(--primary-bg);
+      transform: rotate(30deg);
+    }
+    .header-settings-btn.connected {
+      background: var(--primary-bg);
+    }
+    .header-settings-btn.connected #settingsIcon::after {
+      content: '●';
+      position: absolute;
+      font-size: 8px;
+      color: var(--primary);
+      margin-left: 14px;
+      margin-top: -10px;
+    }
+
+    /* ===== Settings Modal ===== */
+    .settings-modal {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.45);
+      backdrop-filter: blur(4px);
+      z-index: 1001;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .settings-modal.active { display: flex; animation: fadeIn 0.2s ease; }
+    .settings-panel {
+      background: var(--surface);
+      border-radius: var(--radius-xl);
+      width: 100%;
+      max-width: 560px;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: var(--shadow-lg);
+      animation: slideUp 0.3s cubic-bezier(0.4,0,0.2,1);
+    }
+    .settings-panel-header {
+      padding: 24px 28px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .settings-panel-header h2 { font-size: 18px; font-weight: 600; flex: 1; }
+    .settings-panel-body { padding: 24px 28px; }
+    .settings-panel-footer {
+      padding: 16px 28px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+    }
+
+    .preset-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+      gap: 10px;
+      margin-bottom: 24px;
+    }
+    .preset-card {
+      padding: 12px 8px;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-md);
+      text-align: center;
+      cursor: pointer;
+      transition: var(--transition);
+      font-size: 13px;
+      font-weight: 500;
+    }
+    .preset-card:hover { border-color: var(--primary-light); background: var(--primary-bg); }
+    .preset-card.active { border-color: var(--primary); background: var(--primary-bg); color: var(--primary); }
+    .preset-card .preset-icon { font-size: 22px; display: block; margin-bottom: 4px; }
+
+    .api-status-bar {
+      padding: 12px 16px;
+      border-radius: var(--radius-md);
+      font-size: 13px;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .api-status-bar.connected { background: #E8F5E9; color: #2E7D32; border: 1px solid #A5D6A7; }
+    .api-status-bar.disconnected { background: #FFF3E0; color: #E65100; border: 1px solid #FFCC80; }
+
+    .form-row { display: flex; gap: 12px; }
+    .form-row .form-group { flex: 1; }
+
+    .test-btn {
+      padding: 8px 16px;
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      font-weight: 600;
+      background: var(--bg);
+      color: var(--primary);
+      border: 1.5px solid var(--primary);
+      transition: var(--transition);
+      white-space: nowrap;
+    }
+    .test-btn:hover { background: var(--primary); color: white; }
+    .test-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .settings-hint {
+      font-size: 12px;
+      color: var(--text-muted);
+      line-height: 1.7;
+      padding: 12px 16px;
+      background: var(--bg);
+      border-radius: var(--radius-md);
+      margin-top: 16px;
+    }
+    .settings-hint code {
+      background: var(--border-light);
+      padding: 1px 6px;
+      border-radius: 4px;
+      font-size: 11px;
+    }
+
+    /* ===== 外观设置 ===== */
+    .settings-divider {
+      border: none;
+      border-top: 1px solid var(--border-light);
+      margin: 20px 0;
+    }
+
+    /* ===== Toggle Row ===== */
+    .toggle-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 12px 14px;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      transition: var(--transition);
+      user-select: none;
+    }
+    .toggle-row:hover { border-color: var(--primary-light); background: var(--primary-bg); }
+    .toggle-row input[type="checkbox"] {
+      width: 18px; height: 18px; margin-top: 2px; accent-color: var(--primary); cursor: pointer; flex-shrink: 0;
+    }
+    .toggle-text { display: flex; flex-direction: column; gap: 2px; font-size: 13px; font-weight: 500; }
+    .toggle-sub { font-size: 11px; font-weight: 400; color: var(--text-muted); line-height: 1.5; }
+    .toggle-sub code { background: var(--border-light); padding: 1px 5px; border-radius: 4px; }
+
+    /* ===== Animations ===== */
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes bounce {
+      0%, 80%, 100% { transform: scale(0); }
+      40% { transform: scale(1); }
+    }
+
+    /* ===== Responsive ===== */
+    @media (max-width: 768px) {
+      .header { padding: 0 12px; }
+      .header-nav { display: none; }
+      .hero { padding: 40px 16px 60px; }
+      .hero h1 { font-size: 26px; }
+      .modal { max-height: 95vh; }
+      .modal-body { padding: 16px; }
+    }
+
+    /* 左侧索引在窄屏改为顶部堆叠，不再固定 */
+    @media (max-width: 900px) {
+      .app-shell { flex-direction: column; gap: 16px; }
+      .sidebar { position: static; width: 100%; flex: none; max-height: none; }
+      .tool-index { max-height: 52vh; overflow-y: auto; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ===== Header ===== -->
+<header class="header">
+  <div class="logo">
+    <div class="logo-icon"><img src="logo.png" alt="跟着肯尼学英语"></div>
+    <span>跟着肯尼学英语</span>
+  </div>
+  <nav class="header-nav">
+    <a href="#tools" class="active">全部工具</a>
+    <a href="#about">使用指南</a>
+    <a href="#about">关于</a>
+    <button class="header-settings-btn" onclick="openSettings()" title="API 设置">
+      <span id="settingsIcon">⚙️</span>
+    </button>
+  </nav>
+</header>
+
+<!-- ===== Hero ===== -->
+<section class="hero">
+  <div class="hero-content">
+    <h1>跟着肯尼学英语</h1>
+    <p>80+ 智能教学工具，覆盖备课、阅读、写作、词汇、命题、评课全流程</p>
+    <a href="#about" class="hero-cta">📖 查看使用指南</a>
+  </div>
+</section>
+
+<!-- ===== Main: left collapsible index + original content ===== -->
+<div class="app-shell">
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-title">📑 工具索引</div>
+    <div class="tool-index" id="toolIndex"></div>
+  </aside>
+
+  <main class="main" id="tools">
+    <!-- Toolbar -->
+    <div class="toolbar">
+      <div class="search-box">
+        <span class="search-icon">🔍</span>
+        <input type="text" id="searchInput" placeholder="搜索工具名称、关键词或描述...">
+      </div>
+    </div>
+
+    <!-- Filter Tabs -->
+    <div class="filter-tabs" id="filterTabs"></div>
+
+    <!-- Section Title -->
+    <div class="section-title" id="sectionTitle">
+      全部教学工具 <span class="badge" id="toolCount"></span>
+    </div>
+
+    <!-- Tool Grid -->
+    <div class="tool-grid" id="toolGrid"></div>
+  </main>
+</div>
+
+<!-- ===== Modal ===== -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="tool-icon" id="modalIcon"></div>
+      <h2 id="modalTitle"></h2>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body" id="modalBody">
+      <!-- Dynamic content -->
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal()">关闭</button>
+      <button class="btn btn-primary" id="runBtn" onclick="runTool()">▶ 运行工具</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== Footer / 使用指南 ===== -->
+<footer class="footer" id="about">
+  <div class="guide-wrap">
+    <h2 class="guide-title">📖 使用指南</h2>
+    <p class="guide-lead">三步搞定教学准备，从想法到可直接进教室的方案：</p>
+    <div class="guide-steps">
+      <div class="guide-step">
+        <div class="guide-num">1</div>
+        <div class="guide-body">
+          <div class="guide-h">选工具</div>
+          <div class="guide-d">在左侧「工具索引」里按分类（课前备课 / 阅读教学 / 写作教学 …）点开折叠列表，挑一个适合当前任务的工具。</div>
+        </div>
+      </div>
+      <div class="guide-step">
+        <div class="guide-num">2</div>
+        <div class="guide-body">
+          <div class="guide-h">填内容</div>
+          <div class="guide-d">在弹出的窗口中按提示粘贴课文、题目、作文或语篇文本，按需补充年级 / 水平等字段，越具体产出越贴合。</div>
+        </div>
+      </div>
+      <div class="guide-step">
+        <div class="guide-num">3</div>
+        <div class="guide-body">
+          <div class="guide-h">点运行</div>
+          <div class="guide-d">点击「▶ 运行工具」，AI 一键生成结构化教学方案；可复制、可继续追问调整。</div>
+        </div>
+      </div>
+    </div>
+    <p class="guide-foot">提示：首次使用请先点击右上角 ⚙️ 配置 API（本地代理或云端安全代理），否则为演示模式。</p>
+  </div>
+  <p class="footer-brand">跟着肯尼学英语 · 智能教育工具集</p>
+</footer>
+
+<!-- ===== API Settings Modal ===== -->
+<div class="settings-modal" id="settingsModal">
+  <div class="settings-panel">
+    <div class="settings-panel-header">
+      <h2>⚙️ API 模型设置</h2>
+      <button class="modal-close" onclick="closeSettings()">✕</button>
+    </div>
+    <div class="settings-panel-body">
+      <hr class="settings-divider">
+
+      <div class="api-status-bar" id="apiStatusBar">
+        <span id="apiStatusIcon">⚠️</span>
+        <span id="apiStatusText">尚未配置 API，当前为演示模式</span>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">快速选择服务商</label>
+        <div class="preset-grid" id="presetGrid"></div>
+      </div>
+
+      <div class="form-group" id="apiEndpointGroup">
+        <label class="form-label">API 端点 (Base URL) <span class="required">*</span></label>
+        <input type="text" class="form-input" id="apiEndpoint" placeholder="https://api.deepseek.com/v1">
+        <div class="form-hint">OpenAI 兼容接口地址，不含 /chat/completions</div>
+      </div>
+
+      <div class="form-group" id="apiKeyGroup">
+        <label class="form-label">API Key <span class="required">*</span></label>
+        <input type="password" class="form-input" id="apiKey" placeholder="sk-...">
+      </div>
+
+      <div class="form-row">
+        <div class="form-group" style="flex:1;">
+          <label class="form-label">🔐 工作台访问令牌</label>
+          <input type="password" class="form-input" id="wbToken" placeholder="local-dev（本地）" autocomplete="off">
+        </div>
+        <div class="form-group" style="flex:2;">
+          <label class="form-label">🛰️ 工具后端地址</label>
+          <input type="text" class="form-input" id="wbBackend" placeholder="留空=同源（本地/同域部署）">
+        </div>
+      </div>
+      <div class="form-hint" style="margin-top:-4px;margin-bottom:4px;">工具的核心方法论存储在后端服务器（server.js）。运行工具时需凭<b>访问令牌</b>向后端获取提示词；令牌与后端地址不匹配则工具无法运行。本地默认令牌 <code>local-dev</code> 免配置；部署时请设环境变量 <code>WORKBENCH_TOKEN</code> 为私密值，并在此处填入相同令牌。</div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">模型名称 <span class="required">*</span></label>
+          <input type="text" class="form-input" id="apiModel" placeholder="deepseek-chat">
+        </div>
+        <div class="form-group" style="max-width:120px;">
+          <label class="form-label">温度</label>
+          <input type="number" class="form-input" id="apiTemperature" placeholder="0.7" min="0" max="2" step="0.1" value="0.7">
+        </div>
+        <div class="form-group" style="max-width:140px;">
+          <label class="form-label">最大输出长度</label>
+          <input type="number" class="form-input" id="apiMaxTokens" placeholder="16384" min="512" max="32768" step="512" value="16384">
+        </div>
+      </div>
+      <div class="form-hint" style="margin-top:-4px;margin-bottom:4px;">输出 token 上限（默认 16384）。内容不完整时调大（最高 32768）；模型报超出上限时调小。部分重型报告工具（整卷命题评析 / 模拟考卷精析 / 教研论文等）会自动请求更大上限，无需手动调。Gemini/DeepSeek 类上限约 8192。</div>
+
+      <div class="form-group" style="margin-top:16px;">
+        <label class="form-label">调用方式</label>
+
+        <label class="toggle-row">
+          <input type="checkbox" id="cloudProxy" onchange="syncModeUI()">
+          <span class="toggle-text">
+            <strong>☁️ 云端安全代理（密钥存服务器，不暴露浏览器）</strong>
+            <span class="toggle-sub">把 API Key 放在云端代理服务器的环境变量里，浏览器只发送提问内容。可<strong>公开分享链接而不泄露 Key</strong>。需先把 server.js 部署到 Render/Vercel，并在下方填写代理地址。</span>
+          </span>
+        </label>
+
+        <label class="toggle-row" style="margin-top:10px;">
+          <input type="checkbox" id="useProxy" checked>
+          <span class="toggle-text">
+            <strong>通过本地代理调用</strong>
+            <span class="toggle-sub">解决浏览器 CORS 跨域限制。需运行本地服务器 <code>node server.js</code>，否则报 Failed to fetch。适合本地使用商汤/DeepSeek 等所有 OpenAI 兼容模型。</span>
+          </span>
+        </label>
+      </div>
+
+      <div class="form-group" id="cloudProxyUrlGroup" style="margin-top:12px; display:none;">
+        <label class="form-label">云端代理地址</label>
+        <input type="text" class="form-input" id="cloudProxyUrl" placeholder="https://你的应用.onrender.com">
+        <div class="form-hint">部署 server.js 到 Render 后得到的地址。留空 = 同源（即 server.js 同时托管本页面时，例如直接在 Render 上打开）。</div>
+      </div>
+
+      <div class="form-group" id="proxyUrlGroup" style="margin-top:12px;">
+        <label class="form-label">本地代理地址（可选）</label>
+        <input type="text" class="form-input" id="proxyUrl" placeholder="留空 = 同源代理（本地 server.js 推荐）">
+        <div class="form-hint">仅本地用 file:// 打开时才需填本机地址；正常通过 http://localhost:8080 访问时留空即可。</div>
+      </div>
+
+      <div class="settings-hint" style="margin-top:14px;">
+        <p style="margin-bottom:6px;"><strong>☁️ 想在云端链接上独立运行 AI（无需本机服务器、且 Key 不暴露）？</strong></p>
+        <p><strong>推荐：勾选「☁️ 云端安全代理」</strong>，把 server.js 部署到 Render/Vercel，Key 存进平台环境变量，浏览器只发提问。适合<strong>公开分享</strong>。</p>
+        <p>备选（仅个人自用）：关闭「本地代理」，选用支持浏览器直连的服务商：</p>
+        <p>• <strong>🌐 OpenRouter</strong>：OpenAI 兼容 + 支持浏览器 CORS，一个 Key 可用几百种模型（含免费 Gemini）</p>
+        <p>• <strong>✨ Google Gemini</strong>：免费额度大、原生支持 CORS</p>
+        <p style="margin-top:6px;color:#E65100;">⚠️ 浏览器直连会把 API Key 暴露在前端，仅建议个人自用；公开分享前请改用「云端安全代理」。</p>
+      </div>
+
+      <div class="settings-hint">
+        <p style="margin-bottom:6px;"><strong>支持的 OpenAI 兼容服务商：</strong></p>
+        <p>• 商汤 Token(开放平台)：<code>https://token.sensenova.cn/v1</code> / 模型 <code>sensenova-6.7-flash-lite</code>（Key 来自 platform.sensenova.cn）</p>
+        <p>• DeepSeek：<code>https://api.deepseek.com/v1</code> / 模型 <code>deepseek-chat</code></p>
+        <p>• OpenAI：<code>https://api.openai.com/v1</code> / 模型 <code>gpt-4o</code></p>
+        <p>• Moonshot：<code>https://api.moonshot.cn/v1</code> / 模型 <code>moonshot-v1-8k</code></p>
+        <p>• 通义千问：<code>https://dashscope.aliyuncs.com/compatible-mode/v1</code> / 模型 <code>qwen-plus</code></p>
+        <p>• 智谱 GLM：<code>https://open.bigmodel.cn/api/paas/v4</code> / 模型 <code>glm-4-flash</code></p>
+        <p style="margin-top:8px;color:#E65100;">⚠️ 商汤两套系统 Key 不互通：在大装置注册的 Key 只能用 compatible-mode 端点；在开放平台注册的 Key 只能用 token 端点。选错会报 401 鉴权失败。</p>
+        <p style="margin-top:8px;color:#E65100;">⚠️ 商汤 Token 等端点不在 CORS 预检里放行 Authorization 头，<b>浏览器无法直连</b>。纯静态云端站点必须配合「云端安全代理」（部署 server.js）或本地代理才能调用商汤。</p>
+        <p style="margin-top:8px;">Key 仅存储在浏览器 localStorage 中，经本地代理转发，不经过任何第三方服务器。</p>
+      </div>
+    </div>
+    <div class="settings-panel-footer">
+      <button class="btn btn-secondary" onclick="closeSettings()">取消</button>
+      <button class="test-btn" id="testBtn" onclick="testApiConnection()">🔗 测试连接</button>
+      <button class="btn btn-primary" onclick="saveSettings()">💾 保存设置</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ===== 工具分类配置 =====
+const CATEGORIES = [
+  { id: 'all',          name: '全部',       color: '#2D7D5A', bg: '#E8F5EF', icon: '📋' },
+  { id: 'prep',         name: '课前备课',    color: '#2D7D5A', bg: '#E8F5EF', icon: '🧭' },
+  { id: 'reading',      name: '阅读教学',    color: '#1565C0', bg: '#E3F2FD', icon: '📖' },
+  { id: 'writing',      name: '写作教学',    color: '#6A1B9A', bg: '#F3E5F5', icon: '✍️' },
+  { id: 'vocab',        name: '词汇语法',    color: '#E65100', bg: '#FFF3E0', icon: '🔤' },
+  { id: 'classroom',    name: '课堂互动',    color: '#00695C', bg: '#E0F2F1', icon: '💬' },
+  { id: 'exercise',     name: '课后练习',    color: '#283593', bg: '#E8EAF6', icon: '📝' },
+  { id: 'polishing',    name: '磨课评课',    color: '#AD1457', bg: '#FCE4EC', icon: '✨' },
+  { id: 'assessment',   name: '测评命题',    color: '#37474F', bg: '#ECEFF1', icon: '🎯' },
+  { id: 'review',       name: '试卷讲评',    color: '#1B5E20', bg: '#E8F5E9', icon: '📊' },
+  { id: 'student',      name: '学情学法',    color: '#BF360C', bg: '#FBE9E7', icon: '🧠' },
+  { id: 'research',     name: '教研成长',    color: '#4527A0', bg: '#EDE7F6', icon: '📚' },
+  { id: 'selfstudy',    name: '自主学习',    color: '#01579B', bg: '#E1F5FE', icon: '🌱' },
+];
+
+const TOOLS = [
+  {
+    "id": "solo-prep",
+    "cat": "prep",
+    "icon": "🧭",
+    "name": "六步AI备课法",
+    "tags": "六问SOLO素养导向深度学习备课法",
+    "desc": "基于 SOLO 分类理论的素养导向深度备课：六问递进（知识本质→学习动机→SOLO分层目标→SOLO分层练习→深度对话探究议题→做中学方案），覆盖阅读/写作/语法/词汇/听说全课型，输出可直接拿进教室的完整教案。",
+    "version": "v1.0",
+    "hot": true,
+    "maxTokens": 32768
+  },
+  {
+    "id": "reverse-design",
+    "cat": "prep",
+    "icon": "❓",
+    "name": "四步追问备课",
+    "tags": "追问链逆向设计目标导向",
+    "desc": "通过四轮追问（为什么教？教什么？怎么教？怎么评？）完成单元 / 课时备课设计，确保教学目标可测量、活动有效支撑目标。",
+    "version": "v1.0"
+  },
+  {
+    "id": "pep-reading-design",
+    "cat": "prep",
+    "icon": "📐",
+    "name": "人教版阅读课设计",
+    "tags": "PEP人教版语篇分析教学设计",
+    "desc": "专门针对人教版（PEP）英语阅读课的教学设计生成器：Step1 语篇 What/How/Why 分析 → 知识结构图 → 完整教学设计（目标 / 活动 / 板书 / 评价 + 写作迁移任务）。（初中/高中通用）",
+    "version": "v1.0"
+  },
+  {
+    "id": "poa-design",
+    "cat": "prep",
+    "icon": "🧭",
+    "name": "POA 产出导向法设计",
+    "tags": "产出导向法POA驱动促成评价人机协作",
+    "desc": "基于文秋芳「产出导向法(POA)」+ AI 赋能论文，输入课文文本 + 产出任务描述，输出四环节 POA 教学设计：驱动→促成→评价，每个环节附「AI 做辅助 · 教师做判断」人机协作说明。",
+    "version": "v1.0"
+  },
+  {
+    "id": "pbl-design",
+    "cat": "prep",
+    "icon": "🚀",
+    "name": "项目式学习设计 (PBL)",
+    "tags": "PBL项目式学习10阶段引导Word文档",
+    "desc": "基于《AI赋能项目式学习设计》手册，一步步帮你设计 PBL 方案。覆盖 Phase0 信息收集→Phase10 生成 Word，每步呈现设计结果、等教师确认再进下一步。",
+    "version": "v1.0"
+  },
+  {
+    "id": "discourse-analysis",
+    "cat": "reading",
+    "icon": "🔍",
+    "name": "语篇深度分析",
+    "tags": "What/How/Why五步法结构化",
+    "desc": "对教材课文 / 阅读语篇进行全维度深度分析（What/How/Why 三维度框架 + 五步分析法），输出完整分析报告。适用于精读课备课、公开课研读环节。",
+    "version": "v2.1",
+    "hot": true,
+    "maxTokens": 32768
+  },
+  {
+    "id": "rte-reading",
+    "cat": "reading",
+    "icon": "🌳",
+    "name": "读思言深度阅读设计",
+    "tags": "读思言RTE三读三化三创深度阅读",
+    "desc": "基于黄远振教授「读思言」(RTE)英语深度阅读教学理论，生成以「三读、三化、三创」为骨架的模式化深度阅读设计框架。",
+    "version": "v1.0"
+  },
+  {
+    "id": "author-intent",
+    "cat": "reading",
+    "icon": "🎯",
+    "name": "作者意图备课规划器",
+    "tags": "作者意图三维度备课卡Why层",
+    "desc": "基于「三维度作者意图」框架（Communicative / Suggestive / Promotive + 四步法），为高中英语阅读课文生成标准化「作者意图→主问题→语言关注点→读写迁移」备课卡。",
+    "version": "v1.0"
+  },
+  {
+    "id": "hear-unsaid",
+    "cat": "reading",
+    "icon": "🤫",
+    "name": "听见作者没说的话",
+    "tags": "四维倾听文学审美层showing not telling",
+    "desc": "小说/叙事文本「文学审美层」追问框架。从四个倾听维度（视角留白/动作低语/沉默情感/冲突空白）挖出作者未明说的潜台词，输出结构化四维分析+课堂追问包+迁移写作任务。",
+    "version": "v1.0"
+  },
+  {
+    "id": "novel-four-stage",
+    "cat": "reading",
+    "icon": "📚",
+    "name": "小说阅读四阶段设计",
+    "tags": "叶彦萍框架布鲁姆故事山",
+    "desc": "基于叶彦萍「读前启思 → 文本解构 → 主题探究 → 读后拓展」四阶段框架（对应布鲁姆认知六层次），自动生成完整小说阅读课教案。",
+    "version": "v2.0"
+  },
+  {
+    "id": "majincen-reading",
+    "cat": "reading",
+    "icon": "🎯",
+    "name": "马瑾辰式阅读课",
+    "tags": "五段式情景导入学生提问",
+    "desc": "按马瑾辰老师的教学风格生成五段式阅读课教案：情景化导入 → 学生自主提问驱动 → 文本三层解读 → 词典对比法 → 迁移输出活动 + 动态板书。",
+    "version": "v1.0"
+  },
+  {
+    "id": "argument-deep",
+    "cat": "reading",
+    "icon": "⚖️",
+    "name": "议论文深度探究备课",
+    "tags": "议论文识别思辨迁移Opinion Map问题链",
+    "desc": "高中英语议论文深度探究备课：把讲完答案的议论文二次挖掘成思维探究精读材料。走「识别→思辨→迁移」三阶路径，覆盖三要素分析、问题链、论证结构图。",
+    "version": "v1.0"
+  },
+  {
+    "id": "three-color",
+    "cat": "reading",
+    "icon": "🎨",
+    "name": "语篇逻辑三色拆解",
+    "tags": "三色拆解GCG分析七选五语篇结构",
+    "desc": "语篇逻辑三色自动拆解（General/Central/Specific），自动生成三色标注示范 + 功能判断表 + 逻辑推进图 + 七选五衔接设计。",
+    "version": "v1.0"
+  },
+  {
+    "id": "thinking-gaokao",
+    "cat": "reading",
+    "icon": "🧠",
+    "name": "阅读思维品质·高考对接",
+    "tags": "思维品质双维标签元认知监控高考对接",
+    "desc": "英语阅读思维品质培养与高考对接分析器。输出「思维品质×高考考点」对照表：双维思维标签 + 干扰项思维错因 + 元认知复盘话术。",
+    "version": "v1.0"
+  },
+  {
+    "id": "teach-exam-link",
+    "cat": "reading",
+    "icon": "📖",
+    "name": "教考衔接文本解读",
+    "tags": "阅读教学文本解读教考衔接高考题型",
+    "desc": "从教考衔接视角对叙事类英语文本做逐段深度解读，产出语篇功能分析与高考题型功能设问方案，打通课堂文本解读与高考命题逻辑。",
+    "version": "v1.0"
+  },
+  {
+    "id": "reading-circles",
+    "cat": "reading",
+    "icon": "🔄",
+    "name": "阅读圈教学",
+    "tags": "阅读圈Reading Circles角色分工文学圈合作学习核心素养",
+    "desc": "基于罗少茜、李兴勇等六篇阅读圈实证论文，输入课文语篇即生成完整阅读圈教学设计，并给出讨论组长/总结者/文化收集者/生活联系者/单词大师/文段解读者等每个角色的具体任务单与实施流程。",
+    "version": "v1.0",
+    "hot": true,
+    "maxTokens": 32768
+  },
+  {
+    "id": "single-essay",
+    "cat": "writing",
+    "icon": "📋",
+    "name": "单篇作文批改",
+    "tags": "四维评分OCR识别范文校准",
+    "desc": "拍照或粘贴 1 篇学生作文 → AI 四维批改（内容 / 结构 / 语言 / 卷面）+ 提升包（多版本表达 / 个性化范文 / 逐词纠错等 6 模块）→ 生成专业报告 + 同档范文对照。",
+    "version": "v2.2.2",
+    "hot": true,
+    "maxTokens": 32768
+  },
+  {
+    "id": "batch-essay",
+    "cat": "writing",
+    "icon": "📦",
+    "name": "批量作文批改",
+    "tags": "班级学情共性诊断TOP5错误",
+    "desc": "一次粘贴全班作文（每次不超过 5 篇）→ 班级共性诊断（高频错误 TOP5 + 分数段分布）+ 逐篇个性化四维批改 → 教学建议 + 全班成绩单。",
+    "version": "v2.2.3"
+  },
+  {
+    "id": "writing-teacher",
+    "cat": "writing",
+    "icon": "🎓",
+    "name": "写作「小老师」训练",
+    "tags": "六篇范文分层学生互评",
+    "desc": "针对一道写作题生成低 / 中 / 高各 2 篇共 6 篇不同层次范文，含双版本——学生版（乱序裸文 + 任务指引）和教师版（逐篇点评 + 错误标注 + 组织建议）。",
+    "version": "v1.0"
+  },
+  {
+    "id": "continuation-writing",
+    "cat": "writing",
+    "icon": "🖊️",
+    "name": "高考读后续写",
+    "tags": "FAST情节建构 协同效应 动作心理冲击链 心灵鸡汤升华",
+    "desc": "高考读后续写升级版：输入原题后，先用六要素+双线+冲突点做深度解读，以 FAST 策略（情感/行为/环境/过渡主题）搭好情节骨架，用「动作+心理冲击反应链」与协同效应生成两段续写范文，并以「心灵鸡汤」式温暖成长立意做结尾升华。",
+    "version": "v2.0",
+    "hot": true,
+    "maxTokens": 32768
+  },
+  {
+    "id": "applied-writing",
+    "cat": "writing",
+    "icon": "✉️",
+    "name": "高考应用文范文",
+    "tags": "12种体裁约120词格式说明亮点标注",
+    "desc": "高考英语应用文范文自动生成：输入应用文体裁+具体要求 → 输出约120词高考标准范文 + 格式注意事项 + 3个以上高分句型标注。覆盖12种体裁。",
+    "version": "v1.0"
+  },
+  {
+    "id": "writing-coach",
+    "cat": "writing",
+    "icon": "📝",
+    "name": "写作过程教练",
+    "tags": "写作过程过程可见化教学伙伴四步回应",
+    "desc": "高考英语写作过程可见化 AI 教学伙伴。用\"四步回应模式（识别-总结-提问-支持）\"提供教学伙伴式支架而非直接批改，并产出过程可视化看板。",
+    "version": "v1.0"
+  },
+  {
+    "id": "b2-vocab",
+    "cat": "vocab",
+    "icon": "📕",
+    "name": "B2+ 重点词汇提取",
+    "tags": "欧标B2lexical chunks搭配",
+    "desc": "从英文文章中提取欧标 B2 及以上难度的重点词汇（含 lexical chunks），适合备课时的生词预判和重点词汇清单制作。",
+    "version": "v1.0"
+  },
+  {
+    "id": "metaphor-detect",
+    "cat": "vocab",
+    "icon": "🔮",
+    "name": "高考词汇隐喻检测",
+    "tags": "熟词生义动词隐喻语境义高考",
+    "desc": "高考英语词汇隐喻含义检测器：输入一篇英语语篇，自动识别熟词生义、动词隐喻、语境含义，逐词标注本义→语境义→隐喻路径。",
+    "version": "v1.0"
+  },
+  {
+    "id": "journal-adapt",
+    "cat": "vocab",
+    "icon": "🌐",
+    "name": "外刊二次开发练习",
+    "tags": "外刊改编综合练习读写结合",
+    "desc": "从外刊原文出发，二次开发为高中适用的综合语言练习（阅读理解 + 词汇运用 + 长难句分析 + 翻译 + 写作仿练）。",
+    "version": "v1.0"
+  },
+  {
+    "id": "semantic-wave",
+    "cat": "vocab",
+    "icon": "🌊",
+    "name": "语义波语法教学设计",
+    "tags": "语义波理论四步循环解包打包双版本",
+    "desc": "基于语义波理论（解包→打包→重新解包→重新打包四步循环）自动生成高中英语语法教学设计。输出含多模态介入 / 问题链驱动 / 任务群建构的完整教案。",
+    "version": "v1.0"
+  },
+  {
+    "id": "context-sentences",
+    "cat": "vocab",
+    "icon": "🔤",
+    "name": "情境化词汇例句生成",
+    "tags": "情境化例句词汇教学学生画像高考应用文",
+    "desc": "输入一个英语单词，自动生成 2–3 条「贴着学生走」的情境化例句。支持切换学生画像（杭州地区青少年/农村/边疆少数民族/县城）。",
+    "version": "v1.0"
+  },
+  {
+    "id": "vocab-review",
+    "cat": "vocab",
+    "icon": "📚",
+    "name": "词汇复习备课",
+    "tags": "语篇 主题提炼 结构化知识 语义网 词汇教学",
+    "desc": "输入一段英语语篇，AI 自动从文本提炼主题与核心词汇，并依据《基于主题的结构化知识》框架产出结构化知识：主题词汇语义网 + 关联结构表 + 建构路径（对应学习理解→应用实践→迁移创新），直接服务于词汇教学备课。",
+    "version": "v2.1"
+  },
+  {
+    "id": "blackboard-design",
+    "cat": "classroom",
+    "icon": "🪧",
+    "name": "课堂板书设计",
+    "tags": "五法技法库四区功能框架核心主问题",
+    "desc": "V2 升级：融合「五法技法库」与「四区功能框架」，自动生成带核心主问题、分步呈现、多版本与四问自检的结构化板书方案。适用于阅读/语法/写作/听说/复习等所有课型。",
+    "version": "v2.0"
+  },
+  {
+    "id": "classroom-questioning",
+    "cat": "classroom",
+    "icon": "💬",
+    "name": "课堂追问助手",
+    "tags": "六种理答深度学习审美体验",
+    "desc": "基于罗永华 & 刘芬六种理答策略（提示 · 重复 · 改述 · 分解 · 追问 · 链接）+ 深度学习六大特征，为课堂情境生成高质量的追问用语。",
+    "version": "v1.0"
+  },
+  {
+    "id": "ai-proactive-questioning",
+    "cat": "classroom",
+    "icon": "🤔",
+    "name": "AI 主动提问策略",
+    "tags": "主动提问追问策略引导式对话元技能5E问题链",
+    "desc": "训练 AI 更主动地向用户提问和追问的元技能。融合\"问题链驱动\"5E框架与六种理答追问手法，适用于构建会主动澄清需求的智能体/助教。",
+    "version": "v2.0"
+  },
+  {
+    "id": "ppt-to-lesson",
+    "cat": "classroom",
+    "icon": "📄",
+    "name": "PPT 转教案",
+    "tags": "逆向还原结构化补全",
+    "desc": "已有 PPT 课件但缺正式教案？把 PPT 内容贴进来，自动逆向还原为规范教案格式（教学目标 → 过程 → 板书 → 反思），补全缺失的教学设计要素。",
+    "version": "v1.0"
+  },
+  {
+    "id": "paraphrase",
+    "cat": "classroom",
+    "icon": "💬",
+    "name": "地道表达转述释义",
+    "tags": "地道表达同义转述熟词生义词汇升级",
+    "desc": "从英语文章中挖掘地道表达，为每个表达给出英文同义转述、英文释义、中文简释、原句语境与迁移例句，难度对齐初高中（CEFR A2-B2）。",
+    "version": "v1.0"
+  },
+  {
+    "id": "unit-review",
+    "cat": "exercise",
+    "icon": "🗂️",
+    "name": "单元复习学案",
+    "tags": "知识网络词汇复现自测题",
+    "desc": "输入教材版本 + 单元 + 年级，自动生成可直接印发给学生的结构化单元复习学案：核心词汇复现 + 句型回顾 + 语法梳理 + 主题写作 + 自测题 + 知识网络图。",
+    "version": "v1.0"
+  },
+  {
+    "id": "layered-homework",
+    "cat": "exercise",
+    "icon": "🎯",
+    "name": "英语分层作业",
+    "tags": "ABC三层梯度作业差异化",
+    "desc": "英语分层作业自动生成：输入教学单元 / 话题 + 年级 + 学情分层（ABC 三层），输出三梯度作业单（基础巩固层 + 能力提升层 + 拓展挑战层），认知分层（识记→应用→创造）。",
+    "version": "v1.0"
+  },
+  {
+    "id": "morning-reading",
+    "cat": "exercise",
+    "icon": "🌅",
+    "name": "晨读材料生成",
+    "tags": "150–200词词汇表朗读建议",
+    "desc": "按当前教学单元 / 话题 + 年级水平 + 晨读时长，自动生成晨读短文（150–200 词）+ 重点词汇表 + 核心句型标注 + 朗读建议。",
+    "version": "v1.0"
+  },
+  {
+    "id": "daily-conversation",
+    "cat": "exercise",
+    "icon": "🎙️",
+    "name": "每日英语口语卡片",
+    "tags": "对话生成TTS音频3500词晨读口语",
+    "desc": "自动生成高中英语日常对话内容（对话文本 + 生词注释 + 文化背景），全部词汇限定在课标 3500 词内。",
+    "version": "v2.0"
+  },
+  {
+    "id": "mp3-split",
+    "cat": "exercise",
+    "icon": "🎧",
+    "name": "听力 MP3 分割",
+    "tags": "按题号切割自动命名批量处理",
+    "desc": "上传听力 MP3 文件和文本，自动按题目编号分割成独立音频片段，提高听力教学的精准度和效率。",
+    "version": "v1.0"
+  },
+  {
+    "id": "listening-ppt",
+    "cat": "exercise",
+    "icon": "📊",
+    "name": "高考听力分析PPT",
+    "tags": "场景分类题型分布上课用PPT高考标准",
+    "desc": "高考听力分析自动生成PPT：上传听力MP3，按高考标准做场景分类 + 题型分布，生成可直接拿到课堂讲的分析PPT。",
+    "version": "v1.0"
+  },
+  {
+    "id": "daily-quote",
+    "cat": "exercise",
+    "icon": "💎",
+    "name": "每日一句英语解读",
+    "tags": "每日金句多页长图六板块拆解自动生成",
+    "desc": "围绕一句英文金句，自动生成完整「每日一句」多页解读卡片。含：金句+译文、句型结构关键词、表层/深层意思、积累英文表达、写作应用、教学建议。",
+    "version": "v1.0"
+  },
+  {
+    "id": "auto-polish",
+    "cat": "polishing",
+    "icon": "✨",
+    "name": "公开课自动磨课",
+    "tags": "多轮打磨亮点提炼细节优化",
+    "desc": "提交公开课初稿（教案 / PPT 大纲），AI 从教学目标、活动设计、师生互动、时间分配等多维度进行多轮打磨，提出具体改进建议并迭代优化。",
+    "version": "v1.0",
+    "hot": true
+  },
+  {
+    "id": "lesson-audit",
+    "cat": "polishing",
+    "icon": "🔎",
+    "name": "教案挑刺审查",
+    "tags": "挑刺模式硬伤排查合规性",
+    "desc": "严格审查教案，找出目标虚化、活动无效、评价缺失、时间不合理等问题，给出具体的修改意见。",
+    "version": "v1.0"
+  },
+  {
+    "id": "transcript-review",
+    "cat": "polishing",
+    "icon": "🎙️",
+    "name": "逐字稿评课分析",
+    "tags": "评课逐字稿五维分析布鲁姆层级",
+    "desc": "输入课堂逐字稿 / 讲座口播稿，输出五维评课报告（目标·活动·问题·证据·建议）：温和、有证据、可操作。自动统计全课提问的布鲁姆层级分布。",
+    "version": "v1.0",
+    "maxTokens": 32768
+  },
+  {
+    "id": "pre-lesson-polish",
+    "cat": "polishing",
+    "icon": "💎",
+    "name": "预设性磨课",
+    "tags": "磨课教研员视角课前评审优先级",
+    "desc": "预设性磨课——上课前以省教研员身份帮你挑一轮刺，把\"课后补救\"变\"课前预防\"。输出含 7 维度评审 + 问题诊断与修改建议 + 优先级 + 预估得分分布的磨课报告。",
+    "version": "v1.0"
+  },
+  {
+    "id": "paper-evaluation",
+    "cat": "assessment",
+    "icon": "🧭",
+    "name": "整卷命题评析",
+    "tags": "命题评价选材立意能力考查教学引导整卷评析",
+    "desc": "从选材立意、能力考查、教学引导三维度系统评价整份英语试卷的命题质量，产出教研级评析报告。",
+    "version": "v1.0",
+    "maxTokens": 32768
+  },
+  {
+    "id": "vocab-check",
+    "cat": "assessment",
+    "icon": "🔤",
+    "name": "试卷超纲词检测",
+    "tags": "超纲词检测课标词汇高考3100中考1600命题合规",
+    "desc": "对一份英语试卷 / 阅读文本做课标词汇合规检测：逐词比对高考3100或中考1600课标词，标记超纲词汇并给出词频与例句。",
+    "version": "v1.0"
+  },
+  {
+    "id": "paper-qa",
+    "cat": "assessment",
+    "icon": "🔍",
+    "name": "英语试卷质检",
+    "tags": "试卷质检命题漏洞中式英语结构化报告",
+    "desc": "对一份英语试卷做出版前终审式排查：语言/语法、拼写、标点、中式英语、命题逻辑漏洞五类问题，输出可定位到题号的结构化中文报告。",
+    "version": "v1.0"
+  },
+  {
+    "id": "paper-formatting",
+    "cat": "assessment",
+    "icon": "📋",
+    "name": "英语试卷排版",
+    "tags": "Word排版标准格式多题型",
+    "desc": "将散乱的试题文本整理排版为符合高考标准的 Word 试卷文档（含选择题、完形填空、阅读理解、语法填空、写作等模块的标准格式）。",
+    "version": "v1.0"
+  },
+  {
+    "id": "journal-search",
+    "cat": "assessment",
+    "icon": "🔎",
+    "name": "高考外刊搜文",
+    "tags": "外刊原文真实来源多题型适配答案解析",
+    "desc": "输入话题/关键词，推荐适合改编成高考命题的外刊英文原文，标注真实来源、难度分级、内容摘要与适配题型。",
+    "version": "v2.1"
+  },
+  {
+    "id": "reading-adapt",
+    "cat": "assessment",
+    "icon": "✂️",
+    "name": "阅读文本改编",
+    "tags": "高考规范难度可选蓝思值四种框架",
+    "desc": "将英语外刊 / 长文改编为符合学段难度规范的测试文本（320–350 词、4–5 段，支持按初一至高三/中高考或蓝思值定难度）。",
+    "version": "v1.1"
+  },
+  {
+    "id": "reading-test-gen",
+    "cat": "assessment",
+    "icon": "📝",
+    "name": "阅读理解出题",
+    "tags": "高考A/B/C/D卷选项解析考点标注",
+    "desc": "输入一篇英语语篇，按目标难度生成标准阅读理解题，遵循中考/高考 A/B/C/D 四篇命题逻辑（含选项、解析、考点标注）。",
+    "version": "v4.0"
+  },
+  {
+    "id": "cloze-test-gen",
+    "cat": "assessment",
+    "icon": "🧩",
+    "name": "完形填空出题",
+    "tags": "完形填空15空考点标注叙事类",
+    "desc": "英语完形填空自动出题：输入叙事类英语语篇 +目标难度，自动生成标准完形填空（固定15空，4选项）+详细解析。",
+    "version": "v1.5"
+  },
+  {
+    "id": "cloze-adapt",
+    "cat": "assessment",
+    "icon": "📝",
+    "name": "完形文本改编",
+    "tags": "完形改编叙事类难度可选蓝思值挖空点",
+    "desc": "将英语叙事类原文改编为符合完形填空命题规范的测试语篇：保留情节线与情感走向，控制 200–350 词。",
+    "version": "v1.0"
+  },
+  {
+    "id": "grammar-gap-fill",
+    "cat": "assessment",
+    "icon": "🔤",
+    "name": "语法填空出题",
+    "tags": "改编出题7:3比例挖空答案解析",
+    "desc": "输入一篇英语短文，自动先改写再按对应学段标准挖 10 空，支持 7:3 和 6:4 两种有词 / 无词比，输出标准试题 + 答案解析 + 考点分布。",
+    "version": "v3.4"
+  },
+  {
+    "id": "same-source-pipeline",
+    "cat": "assessment",
+    "icon": "🧩",
+    "name": "同源命题流水线",
+    "tags": "命题流水线同源命题一篇拆三题型组卷流水线",
+    "desc": "同源叙事语篇自动命题流水线。输入一篇叙事类英语语篇，先统一做语篇主线分析，再一次性产出阅读(B篇)/完形/语法填空三题型。",
+    "version": "v1.0"
+  },
+  {
+    "id": "reading-b-gen",
+    "cat": "assessment",
+    "icon": "📖",
+    "name": "阅读B篇出题",
+    "tags": "高考B篇人物故事职业故事四问框架强干扰项",
+    "desc": "高考英语阅读理解B篇（人物/职业故事类记叙文）专项命题：选材→改编→功能分析→固定四问→强干扰项→全卷协调→多轮打磨。",
+    "version": "v1.0"
+  },
+  {
+    "id": "cross-sentence-gen",
+    "cat": "assessment",
+    "icon": "🔗",
+    "name": "高阶跨句逻辑题出题",
+    "tags": "跨句题逻辑链高考C/D篇高阶命题",
+    "desc": "高考英语阅读高阶跨句题自动出题：专攻因果链型/双变量追踪型/态度整合型三类句群整合题，输入C篇说明文或D篇议论文。",
+    "version": "v1.0"
+  },
+  {
+    "id": "score-analysis",
+    "cat": "review",
+    "icon": "📈",
+    "name": "成绩数据分析",
+    "tags": "分数段分布雷达图提升建议",
+    "desc": "输入班级成绩数据，自动进行多维统计分析（平均分、中位数、分数段分布、知识点掌握率、进步 / 退步追踪），生成可视化分析报告。",
+    "version": "v1.0"
+  },
+  {
+    "id": "mock-exam-analysis",
+    "cat": "review",
+    "icon": "📈",
+    "name": "模拟考卷精析",
+    "tags": "核心词难句好句逐题解析PPT",
+    "desc": "模拟考卷精析工具：输入整份模拟考英语试卷，输出核心词 + 难句拆解 + 好句摘录 + 逐题解析 + 结构分析 + 可上课 PPT 提纲。",
+    "version": "v1.0",
+    "maxTokens": 32768
+  },
+  {
+    "id": "paper-mining",
+    "cat": "review",
+    "icon": "🔬",
+    "name": "试卷语料深度挖掘",
+    "tags": "词类活用熟词生义地道表达句式结构写作迁移",
+    "desc": "英语试卷 4 维语料深度挖掘：不是讲题，而是把命题人打磨过的语言素材挖成学生的「写作弹药库」。含优质语料、地道表达、句式结构、写作迁移价值四维度。",
+    "version": "v2.0",
+    "maxTokens": 32768
+  },
+  {
+    "id": "paper-discourse",
+    "cat": "review",
+    "icon": "📊",
+    "name": "试卷语篇分析",
+    "tags": "试题视角命题意图难度评估",
+    "desc": "从试卷命题者视角对语篇进行深度分析：命题立意、设问逻辑、干扰项设计、难度分层等。",
+    "version": "v1.0"
+  },
+  {
+    "id": "paper-visual-explain",
+    "cat": "review",
+    "icon": "📝",
+    "name": "试卷可视化讲解",
+    "tags": "试卷讲解逐题解析OCR识别双栏交互",
+    "desc": "把英语试卷交给AI，自动拆题+逐题专业解析。双入口：①粘贴文字或上传DOCX/PDF；②直接传试卷照片，OCR自动识别。左题号导航+右逐题讲解。",
+    "version": "v1.0"
+  },
+  {
+    "id": "pre-class-diagnosis",
+    "cat": "student",
+    "icon": "🧭",
+    "name": "课前学情起点诊断",
+    "tags": "学前诊断五维模型靶向备课学习链",
+    "desc": "高中英语课前学情起点诊断：输入单元/课文主题 + 学生群体 + 可选前测数据，输出五维学情诊断报告（知识基础/认知难点/学习方法/情感态度/个体差异）+ 靶向备课建议。",
+    "version": "v1.0"
+  },
+  {
+    "id": "error-attribution",
+    "cat": "student",
+    "icon": "🛠️",
+    "name": "错题归因与订正",
+    "tags": "错题归因四类模型变式题学习链",
+    "desc": "高中英语错题归因与订正：输入学生错题库/典型错题，输出四类错因分布（语言性/认知性/习惯性/应试性）+ 归因可视化表 + 订正路径 + 变式题。",
+    "version": "v1.0"
+  },
+  {
+    "id": "self-assessment",
+    "cat": "student",
+    "icon": "📋",
+    "name": "学生自评量规",
+    "tags": "布鲁姆六层自评量规反思闭环学习链",
+    "desc": "高中英语学生自评量规与自查清单（布鲁姆层级自查版）：输入任务类型 + 学生作品 + 目标布鲁姆层级，输出六层逐项自查表 + 学生自写反思 + 改进点。",
+    "version": "v1.0"
+  },
+  {
+    "id": "vocab-trainer",
+    "cat": "student",
+    "icon": "📚",
+    "name": "词汇学习陪练",
+    "tags": "艾宾浩斯检索练习语块化学习链",
+    "desc": "高中英语词汇学习陪练（学生端）：输入词汇表，输出个性化陪练方案——语境呈现 → 检索自测 → 艾宾浩斯间隔复习计划 → 薄弱词补救。",
+    "version": "v1.0"
+  },
+  {
+    "id": "learning-tracker",
+    "cat": "student",
+    "icon": "📈",
+    "name": "学情追踪看板",
+    "tags": "学情画像3+1分类纵向追踪学习链",
+    "desc": "高中英语学情追踪看板：输入多轮产出 + 时间轴，输出学生个人学情看板（行为/认知/情感三维度雷达+成长轨迹）+ 班级看板 + 回流诊断建议。",
+    "version": "v1.0"
+  },
+  {
+    "id": "study-method",
+    "cat": "student",
+    "icon": "🧠",
+    "name": "学法指导",
+    "tags": "学法指导SQ3R康奈尔学习链",
+    "desc": "高中英语学法指导：输入一个学习痛点/场景，输出该场景学法指导方案——方法步骤 + 学生可执行动作 + 教师怎么教 + 常见误区 + 衔接学习链。",
+    "version": "v1.0"
+  },
+  {
+    "id": "research-paper",
+    "cat": "research",
+    "icon": "📝",
+    "name": "教研论文写作",
+    "tags": "教研论文六步流程课堂经验学术写作",
+    "desc": "帮中学英语教师把课堂经验转化为可发表的学术论文：六步完整流程（问题提炼→文献对接→数据整理→方法设计→论文框架→学术写作），也支持单步辅助。",
+    "version": "v1.0",
+    "maxTokens": 32768
+  },
+  {
+    "id": "wechat-format",
+    "cat": "research",
+    "icon": "📰",
+    "name": "公众号排版",
+    "tags": "微信排版Markdown转HTML一键排版",
+    "desc": "微信公众号文章排版引擎：把 Markdown / Word / 纯文本一键转成可直接粘进公众号编辑器的 HTML（自动章节编号、关键词下划线、引言卡片、目录导航）。",
+    "version": "v1.0"
+  },
+  {
+    "id": "paper-review",
+    "cat": "research",
+    "icon": "📑",
+    "name": "论文投稿前审查",
+    "tags": "论文审查投稿前五维诊断CRITICAL/MAJOR/MINOR",
+    "desc": "论文投稿前终审打磨：对技术 / 教研论文按宏观逻辑、写作细节、英语语法、LaTeX 排版、图表质量五个维度做审稿式审查。",
+    "version": "v1.0"
+  },
+  {
+    "id": "paper-diagram",
+    "cat": "research",
+    "icon": "🎨",
+    "name": "论文方法图解",
+    "tags": "论文方法流程/机制图解sketchnotepaper-figure",
+    "desc": "把一篇论文的核心方法画成视觉图解：推荐封面 / 方法总览 / 机制细节 / 关键结果的组合与张数，每张图让没读过原文的人也能看懂机制。",
+    "version": "v1.0"
+  },
+  {
+    "id": "academic-mentor",
+    "cat": "research",
+    "icon": "✍️",
+    "name": "学术论文导师",
+    "tags": "降AIGC学术润色原稿改写红线",
+    "desc": "资深学术论文导师（AI 辅助而非替代）：在用户原稿基础上用地道学术语言改写润色，系统性降低 AIGC 检测率。适用于降 AIGC、降重、学术润色。",
+    "version": "v1.0"
+  },
+  {
+    "id": "gaokao-volunteer",
+    "cat": "selfstudy",
+    "icon": "🎯",
+    "name": "高考志愿填报",
+    "tags": "浙江3+3冲稳保垫可视化",
+    "desc": "「高考志愿填报四步法」，适配浙江「3+3」新高考模式（80 个专业平行志愿）。输入高考分数自动查位次、换算等位分、做冲稳保垫四梯度分配。",
+    "version": "v1.0"
+  },
+  {
+    "id": "original-reading",
+    "cat": "selfstudy",
+    "icon": "📚",
+    "name": "英文原著阅读辅助",
+    "tags": "原著阅读词汇句型情节写作测评",
+    "desc": "英文原著阅读辅助（通用版）：上传英文原著 txt 或说书名，支持词汇学习、句型仿写、情节理解、写作助手、检测评估五大场景。",
+    "version": "v1.0"
+  },
+  {
+    "id": "text-language-points",
+    "cat": "selfstudy",
+    "icon": "📝",
+    "name": "课文语言点讲解",
+    "tags": "语篇结构语言点分层练习读写迁移",
+    "desc": "基于语篇结构化知识的高中英语课文语言点高效讲解与练习设计：先梳理语篇结构，再把核心词汇短语、重点句型语法等挂在语篇结构上讲解。",
+    "version": "v2.1"
+  },
+  {
+    "id": "self-prep-reading",
+    "cat": "selfstudy",
+    "icon": "📚",
+    "name": "自主预习阅读",
+    "tags": "自主预习学生端双模式布鲁姆问题链学情回流",
+    "desc": "高中英语学生端自主预习阅读：双模式运行——①互动陪练（AI当脚手架引导不代答）②学案生成（一次性产出结构化预习学案）。",
+    "version": "v1.1"
+  },
+  {
+    "id": "active-reading",
+    "cat": "reading",
+    "icon": "💡",
+    "name": "主动学习视阈下阅读教学",
+    "tags": "四重对话 层次化意义加工 意义建构 学思悟 自主提问",
+    "desc": "基于葛炳芳等《主动学习视阈下的英语阅读教学》系列论文（四重对话路径、意义加工层次性、意义建构策略、三链协同、群文阅读），以\"层次化意义加工\"为主线生成阅读教学设计：阅读前自主提问→阅读中四重对话（与文本/作者/世界对话）解码、挖意、建构→阅读后与自我对话内化迁移。",
+    "version": "v1.0",
+    "hot": true
+  }
+];
+
+
+const TOOL_FORMS = {
+  'solo-prep': [
+    { label: '课文文本', type: 'textarea', name: 'text', placeholder: '粘贴课文文本...', required: true },
+    { label: '课型', type: 'select', name: 'type', options: ['阅读课', '写作课', '语法课', '词汇课', '听说课'], required: true },
+    { label: '学段', type: 'select', name: 'level', options: ['初中', '高中'], required: true },
+  ],
+  'discourse-analysis': [
+    { label: '语篇文本', type: 'textarea', name: 'text', placeholder: '粘贴需要分析的语篇文本...', required: true },
+    { label: '分析模式', type: 'select', name: 'mode', options: ['完整分析', '仅What层', '仅How层', '仅Why层'], required: true },
+  ],
+  'single-essay': [
+    { label: '学生作文', type: 'textarea', name: 'essay', placeholder: '粘贴或输入学生作文...', required: true },
+    { label: '作文题目', type: 'input', name: 'topic', placeholder: '输入作文题目/要求...' },
+    { label: '学段', type: 'select', name: 'level', options: ['初中', '高中'], required: true },
+  ],
+  'reading-test-gen': [
+    { label: '语篇文本', type: 'textarea', name: 'text', placeholder: '粘贴英语语篇文本...', required: true },
+    { label: '目标难度', type: 'select', name: 'level', options: ['初一', '初二', '初三', '高一', '高二', '高三', '中考', '高考'], required: true },
+    { label: '题目数量', type: 'select', name: 'count', options: ['3题', '4题', '5题'], required: true },
+  ],
+  'cloze-test-gen': [
+    { label: '叙事类语篇', type: 'textarea', name: 'text', placeholder: '粘贴叙事类英语语篇（200-350词）...', required: true },
+    { label: '目标难度', type: 'select', name: 'level', options: ['初一', '初二', '初三', '高一', '高二', '高三', '中考', '高考'], required: true },
+  ],
+  'grammar-gap-fill': [
+    { label: '英语短文', type: 'textarea', name: 'text', placeholder: '粘贴英语短文...', required: true },
+    { label: '学段', type: 'select', name: 'level', options: ['初一', '初二', '初三', '高一', '高二', '高三', '中考', '高考'], required: true },
+    { label: '有词/无词比例', type: 'select', name: 'ratio', options: ['7:3', '6:4'], required: true },
+  ],
+  'auto-polish': [
+    { label: '教案/PPT大纲', type: 'textarea', name: 'content', placeholder: '粘贴公开课初稿（教案或PPT大纲）...', required: true },
+    { label: '课型', type: 'select', name: 'type', options: ['阅读课', '写作课', '语法课', '词汇课', '听说课', '复习课'], required: true },
+  ],
+  'score-analysis': [
+    { label: '成绩数据', type: 'textarea', name: 'data', placeholder: '粘贴班级成绩数据（学号 成绩 或 姓名 成绩，每行一条）...', required: true },
+    { label: '满分', type: 'input', name: 'fullScore', placeholder: '如：150', value: '150' },
+  ],
+  'wechat-format': [
+    { label: 'Markdown/文本内容', type: 'textarea', name: 'content', placeholder: '粘贴 Markdown 或纯文本内容...', required: true },
+    { label: '排版风格', type: 'select', name: 'style', options: ['简约白', '温暖橙', '学术蓝', '护眼绿'], required: true },
+  ],
+  'active-reading': [
+    { label: '阅读语篇文本', type: 'textarea', name: 'text', placeholder: '粘贴需要设计阅读课的英语语篇文本（可附中文说明）...', required: true },
+    { label: '年级/学段', type: 'select', name: 'grade', options: ['初一', '初二', '初三', '高一', '高二', '高三'], required: true },
+    { label: '学生水平/学情', type: 'select', name: 'level', options: ['基础薄弱', '中等水平', '拔尖培优'], required: true },
+  ],
+  'vocab-review': [
+    { label: '语篇文本', type: 'textarea', name: 'text', placeholder: '粘贴需要提炼结构化知识的英语语篇（可附中文说明）...', required: true },
+    { label: '年级/学段', type: 'select', name: 'grade', options: ['初一', '初二', '初三', '高一', '高二', '高三'], required: false },
+    { label: '学生水平/学情', type: 'select', name: 'level', options: ['基础薄弱', '中等水平', '拔尖培优'], required: false },
+  ],
+  'reading-circles': [
+    { label: '课文语篇文本', type: 'textarea', name: 'text', placeholder: '粘贴需要开展阅读圈教学的英语课文/语篇文本（可附中文说明）...', required: true },
+    { label: '文本体裁', type: 'select', name: 'genre', options: ['记叙文/故事', '议论文', '说明文/科普', '新闻报道', '诗歌/散文', '其他/不限'], required: true },
+    { label: '年级/学段', type: 'select', name: 'grade', options: ['初一', '初二', '初三', '高一', '高二', '高三'], required: true },
+    { label: '学生水平/学情', type: 'select', name: 'level', options: ['基础薄弱', '中等水平', '拔尖培优'], required: true },
+  ],
+  'continuation-writing': [
+    { label: '读后续写原题', type: 'textarea', name: 'text', placeholder: '粘贴完整原题：原文语篇 + 两段段首句 + 划线关键词 + 词数要求...', required: true },
+    { label: '年级/学段', type: 'select', name: 'grade', options: ['高一', '高二', '高三'], required: true },
+    { label: '学生水平/学情', type: 'select', name: 'level', options: ['基础薄弱', '中等水平', '拔尖培优'], required: false },
+    { label: '立意导向（可选）', type: 'select', name: 'theme', options: ['不限定（智能推荐）', '温暖亲情', '善意传递', '成长感悟', '坚持与克服困难', '自我接纳'], required: false },
+  ],
+};
+
+const DEFAULT_FORM = [
+  { label: '输入内容', type: 'textarea', name: 'content', placeholder: '粘贴课文、题目、学生作文或其他需要处理的内容...', required: true },
+  { label: '补充说明（可选）', type: 'input', name: 'note', placeholder: '如有特殊要求请在此说明...' },
+];
+</script>
+
+<script>
+// ===== 状态管理 =====
+const state = {
+  currentCategory: 'all',
+  searchKeyword: '',
+  favorites: JSON.parse(localStorage.getItem('teaching_favorites') || '[]'),
+  history: JSON.parse(localStorage.getItem('teaching_history') || '[]'),
+  currentTool: null,
+  // 左侧可折叠索引：默认全部折叠，点击分类标题展开
+  expandedCats: new Set(),
+};
+
+function getCategoryById(id) {
+  return CATEGORIES.find(c => c.id === id) || CATEGORIES[0];
+}
+
+function getToolById(id) {
+  return TOOLS.find(t => t.id === id);
+}
+
+function isFavorited(toolId) {
+  return state.favorites.includes(toolId);
+}
+
+function toggleFavorite(toolId) {
+  const idx = state.favorites.indexOf(toolId);
+  if (idx > -1) { state.favorites.splice(idx, 1); }
+  else { state.favorites.push(toolId); }
+  localStorage.setItem('teaching_favorites', JSON.stringify(state.favorites));
+}
+
+function addToHistory(toolId) {
+  const idx = state.history.indexOf(toolId);
+  if (idx > -1) state.history.splice(idx, 1);
+  state.history.unshift(toolId);
+  if (state.history.length > 20) state.history = state.history.slice(0, 20);
+  localStorage.setItem('teaching_history', JSON.stringify(state.history));
+}
+
+function renderFilterTabs() {
+  const container = document.getElementById('filterTabs');
+  let html = '';
+  CATEGORIES.forEach(cat => {
+    const count = cat.id === 'all' ? TOOLS.length : TOOLS.filter(t => t.cat === cat.id).length;
+    const active = state.currentCategory === cat.id ? 'active' : '';
+    html += '<button class="filter-tab ' + active + '" onclick="setCategory(\'' + cat.id + '\')">' + cat.icon + ' ' + cat.name + '<span class="count">' + count + '</span></button>';
+  });
+  const favActive = state.currentCategory === 'fav' ? 'active' : '';
+  html += '<button class="filter-tab ' + favActive + '" onclick="setCategory(\'fav\')">⭐ 已收藏<span class="count">' + state.favorites.length + '</span></button>';
+  container.innerHTML = html;
+}
+
+function setCategory(catId) {
+  state.currentCategory = catId;
+  renderFilterTabs();
+  renderTools();
+  updateSectionTitle();
+}
+
+function updateSectionTitle() {
+  const titleEl = document.getElementById('sectionTitle');
+  const cat = getCategoryById(state.currentCategory);
+  let title = '全部教学工具';
+  if (state.currentCategory === 'fav') title = '⭐ 已收藏工具';
+  else if (state.currentCategory !== 'all') title = cat.icon + ' ' + cat.name;
+  titleEl.innerHTML = title + ' <span class="badge" id="toolCount"></span>';
+  updateToolCount();
+}
+
+function updateToolCount() {
+  const countEl = document.getElementById('toolCount');
+  const filtered = getFilteredTools();
+  if (countEl) countEl.textContent = '共 ' + filtered.length + ' 个工具';
+}
+
+function getFilteredTools() {
+  let tools = TOOLS;
+  if (state.currentCategory === 'fav') { tools = tools.filter(t => isFavorited(t.id)); }
+  else if (state.currentCategory !== 'all') { tools = tools.filter(t => t.cat === state.currentCategory); }
+  if (state.searchKeyword) {
+    const kw = state.searchKeyword.toLowerCase();
+    tools = tools.filter(t => t.name.toLowerCase().includes(kw) || t.desc.toLowerCase().includes(kw) || t.tags.toLowerCase().includes(kw));
+  }
+  return tools;
+}
+
+function toolCardHtml(tool) {
+  const cat = getCategoryById(tool.cat);
+  const starred = isFavorited(tool.id) ? 'starred' : '';
+  const badge = tool.hot ? '<span class="hot-badge">🔥热门</span>' : '';
+  return '<div class="tool-card" style="--cat-color:' + cat.color + ';--cat-bg:' + cat.bg + '" onclick="openTool(\'' + tool.id + '\')">' + badge +
+    '<div class="tool-card-header"><div class="tool-icon" style="background:' + cat.bg + '">' + tool.icon + '</div><div class="tool-info"><div class="tool-name">' + tool.name + '</div><div class="tool-tags">' + tool.tags + '</div></div></div>' +
+    '<div class="tool-desc">' + tool.desc + '</div>' +
+    '<div class="tool-footer"><span class="tool-cat-label" style="color:' + cat.color + ';background:' + cat.bg + '">' + cat.name + '</span>' +
+    '<div style="display:flex;align-items:center;gap:10px;"><span class="tool-version">' + tool.version + '</span>' +
+    '<span class="tool-star ' + starred + '" onclick="event.stopPropagation();onStarClick(\'' + tool.id + '\', this)">' + (isFavorited(tool.id) ? '⭐' : '☆') + '</span></div></div></div>';
+}
+
+// 右侧主区：恢复原卡片网格
+function renderTools() {
+  const grid = document.getElementById('toolGrid');
+  const tools = getFilteredTools();
+  if (tools.length === 0) {
+    grid.innerHTML = '<div class="empty-state" style="grid-column: 1/-1;"><div class="icon">🔍</div><p>没有找到匹配的工具</p><p style="font-size:13px;margin-top:8px;">试试其他关键词或分类</p></div>';
+    updateToolCount(); return;
+  }
+  // 「全部」与「已收藏」按类别分组排序；单分类视图直接平铺
+  const grouped = (state.currentCategory === 'all' || state.currentCategory === 'fav');
+  let html = '';
+  if (!grouped) {
+    tools.forEach(tool => { html += toolCardHtml(tool); });
+  } else {
+    CATEGORIES.filter(c => c.id !== 'all').forEach(cat => {
+      const inCat = tools.filter(t => t.cat === cat.id);
+      if (inCat.length === 0) return;
+      html += '<div class="cat-group-header" style="--cat-color:' + cat.color + ';--cat-bg:' + cat.bg + '">' +
+        '<span class="cat-dot"></span>' + cat.icon + ' ' + cat.name +
+        '<span class="cat-count">' + inCat.length + '</span></div>';
+      inCat.forEach(tool => { html += toolCardHtml(tool); });
+    });
+  }
+  grid.innerHTML = html;
+  updateToolCount();
+}
+
+// 左侧可折叠索引（手风琴）
+function renderIndex() {
+  const container = document.getElementById('toolIndex');
+  let html = '';
+  CATEGORIES.filter(c => c.id !== 'all').forEach(cat => {
+    const inCat = TOOLS.filter(t => t.cat === cat.id);
+    if (inCat.length === 0) return;
+    const open = state.expandedCats.has(cat.id);
+    html += '<div class="idx-group' + (open ? ' open' : '') + '">' +
+      '<div class="idx-header" onclick="toggleCat(\'' + cat.id + '\')">' +
+        '<span class="idx-caret">▶</span>' +
+        '<span class="idx-dot" style="background:' + cat.color + '"></span>' +
+        '<span class="idx-name">' + cat.icon + ' ' + cat.name + '</span>' +
+        '<span class="idx-count">' + inCat.length + '</span>' +
+      '</div><div class="idx-body">';
+    inCat.forEach(t => {
+      html += '<div class="idx-item" onclick="openTool(\'' + t.id + '\')">' +
+        '<span class="idx-item-icon">' + t.icon + '</span>' +
+        '<span class="idx-item-name">' + t.name + (t.hot ? ' 🔥' : '') + '</span></div>';
+    });
+    html += '</div></div>';
+  });
+  // 已收藏分组
+  if (state.favorites.length) {
+    const open = state.expandedCats.has('fav');
+    html += '<div class="idx-group' + (open ? ' open' : '') + '">' +
+      '<div class="idx-header" onclick="toggleCat(\'fav\')">' +
+        '<span class="idx-caret">▶</span>' +
+        '<span class="idx-dot" style="background:var(--accent)"></span>' +
+        '<span class="idx-name">⭐ 已收藏</span>' +
+        '<span class="idx-count">' + state.favorites.length + '</span>' +
+      '</div><div class="idx-body">';
+    state.favorites.forEach(id => {
+      const t = getToolById(id); if (!t) return;
+      html += '<div class="idx-item" onclick="openTool(\'' + t.id + '\')">' +
+        '<span class="idx-item-icon">' + t.icon + '</span>' +
+        '<span class="idx-item-name">' + t.name + '</span></div>';
+    });
+    html += '</div></div>';
+  }
+  container.innerHTML = html;
+}
+
+function toggleCat(catId) {
+  if (state.expandedCats.has(catId)) state.expandedCats.delete(catId);
+  else state.expandedCats.add(catId);
+  renderIndex();
+}
+
+function onStarClick(toolId, el) {
+  toggleFavorite(toolId);
+  el.textContent = isFavorited(toolId) ? '⭐' : '☆';
+  el.classList.toggle('starred');
+  if (state.currentCategory === 'fav') renderTools();
+  renderFilterTabs();
+  renderIndex();
+}
+
+function openTool(toolId) {
+  const tool = getToolById(toolId);
+  if (!tool) return;
+  state.currentTool = tool;
+  const cat = getCategoryById(tool.cat);
+  document.getElementById('modalIcon').textContent = tool.icon;
+  document.getElementById('modalIcon').style.background = cat.bg;
+  document.getElementById('modalTitle').textContent = tool.name;
+  const body = document.getElementById('modalBody');
+  let formHtml = '<div class="modal-desc">' + tool.desc + '</div>';
+  const formConfig = TOOL_FORMS[toolId] || DEFAULT_FORM;
+  formConfig.forEach(field => {
+    const requiredMark = field.required ? '<span class="required">*</span>' : '';
+    if (field.type === 'textarea') {
+      formHtml += '<div class="form-group"><label class="form-label">' + field.label + ' ' + requiredMark + '</label><textarea class="form-textarea" name="' + field.name + '" placeholder="' + (field.placeholder || '') + '"></textarea></div>';
+    } else if (field.type === 'select') {
+      const options = field.options.map(o => '<option value="' + o + '">' + o + '</option>').join('');
+      formHtml += '<div class="form-group"><label class="form-label">' + field.label + ' ' + requiredMark + '</label><select class="form-select" name="' + field.name + '">' + options + '</select></div>';
+    } else {
+      formHtml += '<div class="form-group"><label class="form-label">' + field.label + ' ' + requiredMark + '</label><input type="text" class="form-input" name="' + field.name + '" placeholder="' + (field.placeholder || '') + '" value="' + (field.value || '') + '"></div>';
+    }
+  });
+  formHtml += '<div class="result-area" id="resultArea"><div class="result-header"><span class="result-title">生成结果</span><button class="btn btn-secondary" style="padding:6px 14px;font-size:13px;" onclick="copyResult()">📋 复制</button></div><div class="result-content" id="resultContent"></div></div>';
+  body.innerHTML = formHtml;
+  document.getElementById('modalOverlay').classList.add('active');
+  document.body.style.overflow = 'hidden';
+  addToHistory(toolId);
+}
+
+function closeModal() {
+  document.getElementById('modalOverlay').classList.remove('active');
+  document.body.style.overflow = '';
+  state.currentTool = null;
+}
+
+async function runTool() {
+  if (!state.currentTool) return;
+  const tool = state.currentTool;
+  const formConfig = TOOL_FORMS[tool.id] || DEFAULT_FORM;
+  const body = document.getElementById('modalBody');
+  const formData = {};
+  let hasRequired = true;
+  formConfig.forEach(field => {
+    const el = body.querySelector('[name="' + field.name + '"]');
+    if (el) {
+      formData[field.name] = el.value.trim();
+      if (field.required && !el.value.trim()) {
+        hasRequired = false;
+        el.style.borderColor = '#FF4757';
+        el.style.boxShadow = '0 0 0 3px rgba(255,71,87,0.1)';
+      }
+    }
+  });
+  if (!hasRequired) { showToast('请填写必填项'); return; }
+  const resultArea = document.getElementById('resultArea');
+  const resultContent = document.getElementById('resultContent');
+  const runBtn = document.getElementById('runBtn');
+  resultArea.classList.add('active');
+
+  const configured = isApiConfigured();
+
+  if (!configured) {
+    // ===== 演示模式 =====
+    resultContent.innerHTML = '<div style="display:flex;align-items:center;gap:12px;padding:8px 0;"><div class="loading-dots"><span></span><span></span><span></span></div><span style="color:var(--text-muted);font-size:14px;">演示模式生成中...</span></div>';
+    runBtn.disabled = true;
+    runBtn.style.opacity = '0.6';
+    runBtn.textContent = '⏳ 生成中...';
+    setTimeout(() => {
+      resultContent.innerHTML = generateMockResult(tool, formData);
+      runBtn.disabled = false;
+      runBtn.style.opacity = '1';
+      runBtn.textContent = '▶ 重新运行';
+      resultArea.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }, 1200);
+    return;
+  }
+
+  // ===== 真实 API 调用 =====
+  // 方法论存于后端，先向后端 /api/build 凭令牌取回 systemPrompt（前端只持 UI 元数据）
+  let systemPrompt, userContent;
+  try {
+    ({ systemPrompt, userContent } = await buildToolPromptRemote(tool, formData));
+  } catch (e) {
+    resultContent.innerHTML = '<div style="padding:14px;color:#C62828;background:#FFF3E0;border-radius:8px;">⚠️ ' +
+      (e.message || '无法获取工具提示词，请检查「工作台访问令牌 / 后端地址」设置') + '</div>';
+    runBtn.disabled = false; runBtn.style.opacity = '1'; runBtn.textContent = '▶ 运行工具';
+    return;
+  }
+
+  resultContent.innerHTML = '<div style="display:flex;align-items:center;gap:12px;padding:8px 0;"><div class="loading-dots"><span></span><span></span><span></span></div><span style="color:var(--text-muted);font-size:14px;">AI（' + apiConfig.model + '）正在生成，请稍候...</span></div>';
+  runBtn.disabled = true;
+  runBtn.style.opacity = '0.6';
+  runBtn.textContent = '⏳ 生成中...';
+
+  try {
+    const aiResult = await callAiApi(systemPrompt, userContent);
+    resultContent.innerHTML = renderMarkdown(aiResult);
+    runBtn.disabled = false;
+    runBtn.style.opacity = '1';
+    runBtn.textContent = '▶ 重新运行';
+    resultArea.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  } catch (err) {
+    resultContent.innerHTML =
+      '<div style="background:#FFEBEE;border:1px solid #EF9A9A;border-radius:8px;padding:16px;margin-bottom:12px;">' +
+      '<p style="font-weight:600;color:#C62828;margin-bottom:8px;">❌ API 调用失败</p>' +
+      '<p style="font-size:13px;color:#C62828;margin-bottom:12px;">' + err.message + '</p>' +
+      '<p style="font-size:13px;color:var(--text-secondary);">请检查 API 设置（点击右上角 ⚙️）：</p>' +
+      '<ul style="margin:8px 0;padding-left:20px;font-size:13px;color:var(--text-secondary);">' +
+      '<li>端点地址是否正确（不含 /chat/completions）</li>' +
+      '<li>API Key 是否有效</li>' +
+      '<li>模型名称是否拼写正确</li>' +
+      '<li>网络是否可达（某些 API 需要代理）</li>' +
+      '</ul></div>' +
+      '<p style="font-size:13px;color:var(--text-muted);">以下是演示模式的结果预览：</p>' +
+      generateMockResult(tool, formData);
+    runBtn.disabled = false;
+    runBtn.style.opacity = '1';
+    runBtn.textContent = '▶ 重新运行';
+    resultArea.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+}
+
+function generateMockResult(tool, formData) {
+  const cat = getCategoryById(tool.cat);
+  const content = formData.content || formData.text || formData.essay || formData.data || '';
+  return '<div style="border-left:3px solid ' + cat.color + ';padding-left:16px;margin-bottom:16px;">' +
+    '<div style="font-weight:600;color:' + cat.color + ';margin-bottom:8px;">📌 ' + tool.name + ' · 生成报告</div>' +
+    '<div style="font-size:13px;color:var(--text-muted);">工具版本 ' + tool.version + ' | 分类：' + cat.name + '</div></div>' +
+    '<p style="margin-bottom:12px;"><strong>已接收输入内容：</strong></p>' +
+    '<div style="background:white;border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:16px;font-size:13px;max-height:150px;overflow-y:auto;">' + content.substring(0, 500) + (content.length > 500 ? '...' : '') + '</div>' +
+    '<p style="margin-bottom:12px;"><strong>AI 分析结果：</strong></p>' +
+    '<div style="background:white;border:1px solid var(--border);border-radius:8px;padding:16px;margin-bottom:12px;">' +
+    '<p style="margin-bottom:10px;">✅ <strong>输入解析完成</strong>：已识别输入内容并完成结构化分析。</p>' +
+    '<p style="margin-bottom:10px;">✅ <strong>方法论应用</strong>：' + tool.tags + '</p>' +
+    '<p style="margin-bottom:10px;">✅ <strong>方案框架</strong>：已基于「' + tool.name + '」的方法论生成结构化教学方案。</p></div>' +
+    '<div style="background:#FFF8E1;border:1px solid #FFE082;border-radius:8px;padding:12px;font-size:13px;color:#F57F17;">💡 <strong>当前为演示模式</strong>：这是预览结果。点击右上角 <strong>⚙️</strong> 按钮配置 AI 模型 API（支持 DeepSeek、OpenAI、通义千问等），即可获得完整的、可直接使用的高质量教学方案。</div>';
+}
+
+function copyResult() {
+  const content = document.getElementById('resultContent').innerText;
+  navigator.clipboard.writeText(content).then(() => showToast('已复制到剪贴板')).catch(() => showToast('复制失败，请手动选择文本复制'));
+}
+
+function showToast(message) {
+  const existing = document.querySelector('.toast');
+  if (existing) existing.remove();
+  const toast = document.createElement('div');
+  toast.className = 'toast';
+  toast.textContent = message;
+  toast.style.cssText = 'position:fixed;bottom:30px;left:50%;transform:translateX(-50%);background:rgba(26,26,46,0.9);color:white;padding:10px 24px;border-radius:24px;font-size:14px;z-index:2000;animation:fadeIn 0.2s ease;backdrop-filter:blur(8px);';
+  document.body.appendChild(toast);
+  setTimeout(() => { toast.style.opacity = '0'; toast.style.transition = 'opacity 0.3s'; setTimeout(() => toast.remove(), 300); }, 2000);
+}
+
+document.getElementById('searchInput').addEventListener('input', (e) => { state.searchKeyword = e.target.value; renderTools(); });
+document.getElementById('modalOverlay').addEventListener('click', (e) => { if (e.target.id === 'modalOverlay') closeModal(); });
+document.getElementById('settingsModal').addEventListener('click', (e) => { if (e.target.id === 'settingsModal') closeSettings(); });
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { closeModal(); closeSettings(); } });
+
+// ===== API 预设服务商 =====
+const API_PRESETS = [
+  { id: 'sensenova-token', name: '商汤Token', icon: '🔷', endpoint: 'https://token.sensenova.cn/v1',          model: 'sensenova-6.7-flash-lite' },
+  { id: 'openrouter', name: 'OpenRouter', icon: '🌐', endpoint: 'https://openrouter.ai/api/v1', model: 'google/gemini-2.0-flash-001', cors: true },
+  { id: 'gemini',    name: 'Google Gemini', icon: '✨', endpoint: 'https://generativelanguage.googleapis.com/v1beta/models', model: 'gemini-2.0-flash', cors: true, format: 'gemini' },
+  { id: 'deepseek',  name: 'DeepSeek',  icon: '🐳', endpoint: 'https://api.deepseek.com/v1',                  model: 'deepseek-chat' },
+  { id: 'openai',    name: 'OpenAI',    icon: '🟢', endpoint: 'https://api.openai.com/v1',                    model: 'gpt-4o' },
+  { id: 'moonshot',  name: 'Moonshot',  icon: '🌙', endpoint: 'https://api.moonshot.cn/v1',                   model: 'moonshot-v1-8k' },
+  { id: 'qwen',      name: '通义千问',   icon: '🟣', endpoint: 'https://dashscope.aliyuncs.com/compatible-mode/v1', model: 'qwen-plus' },
+  { id: 'glm',       name: '智谱GLM',   icon: '🟠', endpoint: 'https://open.bigmodel.cn/api/paas/v4',         model: 'glm-4-flash' },
+  { id: 'custom',    name: '自定义',     icon: '⚙️', endpoint: '',                                            model: '' },
+];
+
+// ===== API 设置管理 =====
+const apiConfig = {
+  endpoint:    localStorage.getItem('api_endpoint')    || '',
+  apiKey:      localStorage.getItem('api_key')         || '',
+  model:       localStorage.getItem('api_model')       || '',
+  provider:    localStorage.getItem('api_provider')    || '',
+  temperature: parseFloat(localStorage.getItem('api_temperature') || '0.7'),
+  maxTokens: Math.min(32768, Math.max(512, parseInt(localStorage.getItem('api_max_tokens')) || 16384)),
+  useProxy:    localStorage.getItem('api_use_proxy')   !== 'false',
+  proxyUrl:    localStorage.getItem('api_proxy_url')   || '',
+  cloudProxy:  localStorage.getItem('api_cloud_proxy') === 'true',
+  cloudProxyUrl: localStorage.getItem('api_cloud_proxy_url') || '',
+  // 工具后端访问令牌与地址（方案1：方法论存于后端，令牌校验后方可获取提示词）
+  token:   localStorage.getItem('workbench_token')   || 'local-dev',
+  backend: localStorage.getItem('workbench_backend') || '',
+};
+
+// 云端安全代理模式下：显示/隐藏对应字段
+function syncModeUI() {
+  const cloud = document.getElementById('cloudProxy').checked;
+  const show = id => { const el = document.getElementById(id); if (el) el.style.display = cloud ? 'none' : ''; };
+  show('apiEndpointGroup');
+  show('apiKeyGroup');
+  const cpu = document.getElementById('cloudProxyUrlGroup'); if (cpu) cpu.style.display = cloud ? '' : 'none';
+  const pug = document.getElementById('proxyUrlGroup'); if (pug) pug.style.display = cloud ? 'none' : '';
+}
+
+// 获取实际代理地址：http 页面用相对路径，file:// 页面用配置的绝对地址
+function getProxyBase() {
+  if (location.protocol === 'http:' || location.protocol === 'https:') {
+    return '';
+  }
+  return apiConfig.proxyUrl.replace(/\/+$/, '');
+}
+
+function isApiConfigured() {
+  if (apiConfig.cloudProxy) return !!(apiConfig.provider && apiConfig.provider !== 'custom' && apiConfig.model);
+  return !!(apiConfig.endpoint && apiConfig.apiKey && apiConfig.model);
+}
+
+function renderPresets() {
+  const grid = document.getElementById('presetGrid');
+  let html = '';
+  API_PRESETS.forEach(p => {
+    const active = apiConfig.endpoint === p.endpoint ? 'active' : '';
+    html += '<div class="preset-card ' + active + '" onclick="applyPreset(\'' + p.id + '\')">' +
+      '<span class="preset-icon">' + p.icon + '</span>' + p.name + '</div>';
+  });
+  grid.innerHTML = html;
+}
+
+function applyPreset(presetId) {
+  const preset = API_PRESETS.find(p => p.id === presetId);
+  if (!preset) return;
+  document.getElementById('apiEndpoint').value = preset.endpoint;
+  document.getElementById('apiModel').value = preset.model;
+  apiConfig.provider = preset.id;
+  // CORS 友好服务商：自动关闭本地代理，便于云端/静态部署的网页直接调用
+  if (preset.cors) {
+    const up = document.getElementById('useProxy');
+    if (up) up.checked = false;
+    const grp = document.getElementById('proxyUrlGroup');
+    if (grp) grp.style.display = 'none';
+    showToast('已选用支持浏览器直连的服务商，已自动关闭本地代理（适合云端部署）');
+  }
+  renderPresets();
+  showModelHint(presetId);
+  document.querySelectorAll('.preset-card').forEach((el, i) => {
+    el.classList.toggle('active', API_PRESETS[i].id === presetId);
+  });
+}
+
+// 根据端点判断 API 格式：Gemini 原生格式 / 其他 OpenAI 兼容格式
+function getApiFormat() {
+  return (apiConfig.endpoint || '').includes('generativelanguage.googleapis.com') ? 'gemini' : 'openai';
+}
+
+// 明确支持浏览器 CORS 直连的厂商（其端点在预检里放行 Authorization 头）
+function isCorsFriendly(endpoint) {
+  return ['openrouter.ai', 'generativelanguage.googleapis.com'].some(h => (endpoint || '').includes(h));
+}
+
+// 各服务商可用模型列表
+const MODEL_HINTS = {
+  'sensenova-token': [
+    { name: 'sensenova-6.7-flash-lite', desc: 'Token端点专用模型，256K上下文' },
+  ],
+  deepseek: [
+    { name: 'deepseek-chat',  desc: '通用对话，性价比最高' },
+    { name: 'deepseek-reasoner', desc: '推理模型，适合复杂分析' },
+  ],
+  openai: [
+    { name: 'gpt-4o',         desc: '最新旗舰模型' },
+    { name: 'gpt-4o-mini',   desc: '轻量版，速度快成本低' },
+  ],
+  moonshot: [
+    { name: 'moonshot-v1-8k',  desc: '8K上下文' },
+    { name: 'moonshot-v1-32k', desc: '32K上下文' },
+  ],
+  qwen: [
+    { name: 'qwen-plus',   desc: '增强版' },
+    { name: 'qwen-turbo',  desc: '快速版' },
+  ],
+  glm: [
+    { name: 'glm-4-flash',  desc: '免费模型' },
+    { name: 'glm-4',        desc: '标准版' },
+  ],
+  openrouter: [
+    { name: 'google/gemini-2.0-flash-001', desc: 'Google Gemini Flash，免费，中文强（推荐）' },
+    { name: 'openai/gpt-4o-mini',          desc: 'OpenAI 轻量版，便宜' },
+    { name: 'meta-llama/llama-3.1-8b-instruct:free', desc: 'Llama 免费版' },
+    { name: 'anthropic/claude-3.5-sonnet', desc: 'Claude 高级（付费）' },
+  ],
+  gemini: [
+    { name: 'gemini-2.0-flash', desc: '最新 Flash，免费额度大，中文强（推荐）' },
+    { name: 'gemini-1.5-flash', desc: '稳定版 Flash' },
+    { name: 'gemini-1.5-pro',   desc: 'Pro 版，更强但稍慢' },
+  ],
+};
+
+function showModelHint(presetId) {
+  let hintEl = document.getElementById('modelHint');
+  if (!hintEl) {
+    hintEl = document.createElement('div');
+    hintEl.id = 'modelHint';
+    hintEl.style.cssText = 'font-size:12px;color:var(--text-muted);margin-top:8px;padding:10px 14px;background:var(--bg);border-radius:8px;';
+    const modelInput = document.getElementById('apiModel');
+    modelInput.parentElement.appendChild(hintEl);
+  }
+  const models = MODEL_HINTS[presetId];
+  if (!models) { hintEl.innerHTML = ''; return; }
+  let html = '<div style="margin-bottom:4px;font-weight:600;">可用模型（点击切换）：</div>';
+  models.forEach(m => {
+    html += '<div style="padding:4px 0;cursor:pointer;" onclick="document.getElementById(\'apiModel\').value=\'' + m.name + '\';" onmouseover="this.style.color=\'var(--primary)\';" onmouseout="this.style.color=\'var(--text-muted)\';">'
+      + '<strong>' + m.name + '</strong> — ' + m.desc + '</div>';
+  });
+  hintEl.innerHTML = html;
+}
+
+// ===== 外观设置（名称/主题色为固定默认值，不在面板修改）=====
+const appearance = {
+  name:  '跟着肯尼学英语',
+  color: '#1565C0',
+};
+
+function adjustColor(hex, percent) {
+  hex = hex.replace('#','');
+  if (hex.length === 3) hex = hex.split('').map(c => c + c).join('');
+  let r = parseInt(hex.substring(0,2),16), g = parseInt(hex.substring(2,4),16), b = parseInt(hex.substring(4,6),16);
+  const t = percent < 0 ? 0 : 255;
+  const p = Math.abs(percent)/100;
+  r = Math.round((t - r)*p) + r; g = Math.round((t - g)*p) + g; b = Math.round((t - b)*p) + b;
+  return '#' + [r,g,b].map(x => x.toString(16).padStart(2,'0')).join('');
+}
+
+function applyAppearance() {
+  const root = document.documentElement;
+  root.style.setProperty('--primary', appearance.color);
+  root.style.setProperty('--primary-light', adjustColor(appearance.color, 22));
+  root.style.setProperty('--primary-dark', adjustColor(appearance.color, -22));
+  root.style.setProperty('--primary-bg', adjustColor(appearance.color, 90));
+  const name = appearance.name || '跟着肯尼学英语';
+  document.title = name + ' · 智能教育工具集';
+  const logoSpan = document.querySelector('.logo span');
+  if (logoSpan) logoSpan.textContent = name;
+  const h1 = document.querySelector('.hero h1');
+  if (h1) h1.textContent = name;
+  const footerP = document.querySelector('.footer p');
+  if (footerP) footerP.textContent = name + ' · 智能教育工具集';
+}
+
+// ===== 背景图片 =====
+// 站内固定背景（英语教学内容风），不再提供自定义上传
+const DEFAULT_BG = 'bg-aurora-3.jpg';
+
+function applyBackground() {
+  const root = document.documentElement;
+  root.style.setProperty('--bg-photo', 'url("' + DEFAULT_BG + '")');
+  document.body.classList.add('has-photo');
+}
+
+function openSettings() {
+  document.getElementById('apiEndpoint').value = apiConfig.endpoint;
+  document.getElementById('apiKey').value = apiConfig.apiKey;
+  document.getElementById('apiModel').value = apiConfig.model;
+  document.getElementById('apiTemperature').value = apiConfig.temperature;
+  document.getElementById('apiMaxTokens').value = apiConfig.maxTokens;
+  document.getElementById('useProxy').checked = apiConfig.useProxy;
+  document.getElementById('proxyUrl').value = apiConfig.proxyUrl;
+  document.getElementById('cloudProxy').checked = apiConfig.cloudProxy;
+  document.getElementById('cloudProxyUrl').value = apiConfig.cloudProxyUrl;
+  document.getElementById('wbToken').value = apiConfig.token;
+  document.getElementById('wbBackend').value = apiConfig.backend;
+  renderPresets();
+  syncModeUI();
+  // 显示已配置服务商的模型提示
+  const matched = API_PRESETS.find(p => p.endpoint === apiConfig.endpoint);
+  showModelHint(matched ? matched.id : '');
+  updateApiStatusBar();
+  document.getElementById('settingsModal').classList.add('active');
+  document.body.style.overflow = 'hidden';
+}
+
+// 代理开关切换时同步字段显隐
+document.addEventListener('DOMContentLoaded', () => {
+  const up = document.getElementById('useProxy');
+  if (up) up.addEventListener('change', () => { syncModeUI(); });
+});
+
+function closeSettings() {
+  document.getElementById('settingsModal').classList.remove('active');
+  document.body.style.overflow = '';
+}
+
+function saveSettings() {
+  applyAppearance();
+  apiConfig.endpoint    = document.getElementById('apiEndpoint').value.trim().replace(/\/+$/, '');
+  apiConfig.apiKey      = document.getElementById('apiKey').value.trim();
+  apiConfig.model       = document.getElementById('apiModel').value.trim();
+  apiConfig.temperature = parseFloat(document.getElementById('apiTemperature').value) || 0.7;
+  apiConfig.maxTokens  = Math.min(32768, Math.max(512, parseInt(document.getElementById('apiMaxTokens').value) || 16384));
+  apiConfig.useProxy    = document.getElementById('useProxy').checked;
+  apiConfig.proxyUrl    = document.getElementById('proxyUrl').value.trim().replace(/\/+$/, '');
+  apiConfig.cloudProxy  = document.getElementById('cloudProxy').checked;
+  apiConfig.cloudProxyUrl = document.getElementById('cloudProxyUrl').value.trim().replace(/\/+$/, '');
+  apiConfig.token   = document.getElementById('wbToken').value.trim() || 'local-dev';
+  apiConfig.backend = document.getElementById('wbBackend').value.trim().replace(/\/+$/, '');
+
+  localStorage.setItem('api_endpoint',    apiConfig.endpoint);
+  localStorage.setItem('api_key',         apiConfig.apiKey);
+  localStorage.setItem('api_model',       apiConfig.model);
+  localStorage.setItem('api_provider',    apiConfig.provider);
+  localStorage.setItem('api_temperature', apiConfig.temperature.toString());
+  localStorage.setItem('api_max_tokens', apiConfig.maxTokens.toString());
+  localStorage.setItem('api_use_proxy',   apiConfig.useProxy.toString());
+  localStorage.setItem('api_proxy_url',   apiConfig.proxyUrl);
+  localStorage.setItem('api_cloud_proxy', apiConfig.cloudProxy.toString());
+  localStorage.setItem('api_cloud_proxy_url', apiConfig.cloudProxyUrl);
+  localStorage.setItem('workbench_token',   apiConfig.token);
+  localStorage.setItem('workbench_backend', apiConfig.backend);
+
+  updateApiStatusBar();
+  updateSettingsButton();
+  showToast(isApiConfigured() ? '✅ API 设置已保存' : '设置已保存（未完整配置，仍为演示模式）');
+  closeSettings();
+}
+
+function updateApiStatusBar() {
+  const bar = document.getElementById('apiStatusBar');
+  const icon = document.getElementById('apiStatusIcon');
+  const text = document.getElementById('apiStatusText');
+  if (isApiConfigured()) {
+    bar.className = 'api-status-bar connected';
+    if (apiConfig.cloudProxy) {
+      icon.textContent = '☁️';
+      text.textContent = '云端安全代理：' + apiConfig.provider + ' / ' + apiConfig.model + '（密钥存于服务器）';
+    } else {
+      icon.textContent = '✅';
+      text.textContent = '已连接：' + apiConfig.model + ' @ ' + apiConfig.endpoint;
+    }
+  } else {
+    bar.className = 'api-status-bar disconnected';
+    icon.textContent = '⚠️';
+    text.textContent = '尚未配置 API，当前为演示模式';
+  }
+}
+
+function updateSettingsButton() {
+  const btn = document.querySelector('.header-settings-btn');
+  if (isApiConfigured()) btn.classList.add('connected');
+  else btn.classList.remove('connected');
+}
+
+async function testApiConnection() {
+  const endpoint = document.getElementById('apiEndpoint').value.trim().replace(/\/+$/, '');
+  const apiKey   = document.getElementById('apiKey').value.trim();
+  const model    = document.getElementById('apiModel').value.trim();
+  const useProxy = document.getElementById('useProxy').checked;
+  const proxyUrl = document.getElementById('proxyUrl').value.trim().replace(/\/+$/, '');
+  const cloudProxy = document.getElementById('cloudProxy').checked;
+  const cloudProxyUrl = document.getElementById('cloudProxyUrl').value.trim().replace(/\/+$/, '');
+
+  if (cloudProxy) {
+    if (!apiConfig.provider || apiConfig.provider === 'custom' || !model) {
+      showToast('请先选择服务商预设并填写模型名称');
+      return;
+    }
+  } else if (!endpoint || !apiKey || !model) {
+    showToast('请先填写端点、Key 和模型名称');
+    return;
+  }
+
+  const btn = document.getElementById('testBtn');
+  btn.disabled = true;
+  btn.textContent = '⏳ 测试中...';
+
+  try {
+    let res;
+    if (cloudProxy) {
+      // 云端安全代理：浏览器只发 provider + 提问，Key 由服务器读取
+      const base = cloudProxyUrl || '';
+      res = await fetch(base + '/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          provider: apiConfig.provider,
+          model,
+          system: '你是测试助手',
+          messages: [{ role: 'user', content: '请回复"连接成功"四个字' }],
+          temperature: 0,
+          max_tokens: 20,
+        }),
+      });
+    } else if (useProxy) {
+      const base = (location.protocol === 'http:' || location.protocol === 'https:') ? '' : proxyUrl;
+      res = await fetch(base + '/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ endpoint, apiKey, model, messages: [{ role: 'user', content: '请回复"连接成功"四个字' }], max_tokens: 20, temperature: 0 }),
+      });
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        const errMsg = errData.error?.message || errData.message || errData.error_msg || JSON.stringify(errData).slice(0, 200) || ('HTTP ' + res.status);
+        throw new Error('[' + res.status + '] ' + errMsg);
+      }
+      try {
+        const data = await res.json();
+        showToast('✅ 连接成功！模型回复：' + (data.content || '(空回复)').substring(0, 30));
+      } catch (e) {
+        if (base === '' && isCorsFriendly(endpoint)) {
+          // 同源代理不存在（静态托管），回退直连测试（仅对明确支持 CORS 的厂商）
+          const reply = await testDirectConnection(endpoint, apiKey, model);
+          showToast('✅ 连接成功！(已自动回退直连) 模型回复：' + (reply || '(空回复)').substring(0, 30));
+        } else {
+          showToast('❌ 连接失败：当前为纯静态站点且无代理服务。商汤 Token 不支持浏览器直连，请改用「云端安全代理」或本地代理');
+        }
+      }
+      return;
+    } else {
+      const reply = await testDirectConnection(endpoint, apiKey, model);
+      showToast('✅ 连接成功！模型回复：' + (reply || '(空回复)').substring(0, 30));
+    }
+  } catch (err) {
+    showToast('❌ 连接失败：' + err.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '🔗 测试连接';
+  }
+}
+
+// 浏览器直连测试（不经过代理，依赖服务商 CORS）
+async function testDirectConnection(endpoint, apiKey, model) {
+  let res;
+  if (endpoint.includes('generativelanguage.googleapis.com')) {
+    const url = endpoint + '/' + model + ':generateContent?key=' + encodeURIComponent(apiKey);
+    res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{ role: 'user', parts: [{ text: '请回复"连接成功"四个字' }] }],
+        generationConfig: { temperature: 0, maxOutputTokens: 20 },
+      }),
+    });
+  } else {
+    res = await fetch(endpoint + '/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + apiKey,
+      },
+      body: JSON.stringify({ model, messages: [{ role: 'user', content: '请回复"连接成功"四个字' }], max_tokens: 20, temperature: 0 }),
+    });
+  }
+  if (!res.ok) {
+    const errData = await res.json().catch(() => ({}));
+    const errMsg = errData.error?.message || errData.message || errData.error_msg || JSON.stringify(errData).slice(0, 200) || ('HTTP ' + res.status);
+    throw new Error('[' + res.status + '] ' + errMsg);
+  }
+  const data = await res.json();
+  return endpoint.includes('generativelanguage.googleapis.com')
+    ? (data.candidates?.[0]?.content?.parts?.[0]?.text || '(空回复)')
+    : (data.choices?.[0]?.message?.content || '(空回复)');
+}
+
+// 计算当前工具实际使用的输出 token 上限：
+// 优先用工具自身声明的 maxTokens（超长报告类工具），否则用全局设置。
+// 这样整卷命题评析 / 模拟考卷精析 / 教研论文等重型工具能自动请求更大篇幅，避免内容被截断。
+function getEffectiveMaxTokens() {
+  const t = state.currentTool && state.currentTool.maxTokens;
+  return (typeof t === 'number' && t > 0) ? t : apiConfig.maxTokens;
+}
+
+// ===== 调用 AI API =====
+async function callAiApi(systemPrompt, userContent) {
+  const messages = [
+    { role: 'system', content: systemPrompt },
+    { role: 'user',   content: userContent },
+  ];
+  const body = {
+    model: apiConfig.model,
+    messages,
+    temperature: apiConfig.temperature,
+    max_tokens: getEffectiveMaxTokens(),
+    max_completion_tokens: getEffectiveMaxTokens(),
+    stream: false,
+  };
+
+  // —— 云端安全代理模式（密钥存服务器，浏览器只发提问）——
+  if (apiConfig.cloudProxy) {
+    if (!apiConfig.cloudProxyUrl) {
+      throw new Error('未填写「云端代理地址」。请先把 server.js 部署到 Render 等平台，再在此填入其地址（如 https://xxx.onrender.com）。');
+    }
+    const base = apiConfig.cloudProxyUrl.replace(/\/+$/, '');
+    const res = await fetch(base + '/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        provider: apiConfig.provider,
+        model: apiConfig.model,
+        system: systemPrompt,
+        messages: [{ role: 'user', content: userContent }],
+        temperature: apiConfig.temperature,
+        max_tokens: getEffectiveMaxTokens(),
+      }),
+    });
+    if (!res.ok) {
+      const errData = await res.json().catch(() => ({}));
+      const errMsg = errData.error?.message || JSON.stringify(errData).slice(0, 200) || ('HTTP ' + res.status);
+      throw new Error('[' + res.status + '] 云端代理：' + errMsg);
+    }
+    let data;
+    try {
+      data = await res.json();
+    } catch (e) {
+      throw new Error('云端代理地址无效（未返回 JSON，可能填成了静态站点地址）。请填写部署了 server.js 的地址。');
+    }
+    return data.content || '(模型返回了空内容)';
+  }
+
+  // —— 本地代理模式（默认，配合本地 server.js 解决 CORS）——
+  if (apiConfig.useProxy) {
+    const base = getProxyBase();
+    const res = await fetch(base + '/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ endpoint: apiConfig.endpoint, apiKey: apiConfig.apiKey, ...body }),
+    });
+    if (!res.ok) {
+      const errData = await res.json().catch(() => ({}));
+      const errMsg = errData.error?.message || errData.message || errData.error_msg || JSON.stringify(errData).slice(0, 200) || ('HTTP ' + res.status);
+      throw new Error('[' + res.status + '] 代理：' + errMsg + '\n（若提示 Failed to fetch，请确认已运行 node server.js）');
+    }
+    // 静态托管（如 CloudStudio）没有真正的代理服务，/api/chat 会返回 HTML 页面而非 JSON。
+    // 注意：商汤 Token 等端点不在 CORS 预检里放行 Authorization 头，浏览器【无法直连】它们。
+    // 只有明确支持 CORS 的服务商（OpenRouter / Gemini）才回退直连；其余必须走代理。
+    let data;
+    try {
+      data = await res.json();
+    } catch (e) {
+      if (base === '' && isCorsFriendly(apiConfig.endpoint)) {
+        console.warn('同源代理不可用（静态托管），已回退浏览器直连模式');
+        return await callDirectApi(systemPrompt, userContent);
+      }
+      throw new Error(
+        '当前为纯静态云端站点，未检测到可用的代理服务。\n' +
+        '商汤 Token 端点不允许浏览器直连（CORS 预检不放行 Authorization 头），' +
+        '请改用「云端安全代理」（把 server.js 部署到 Render 等平台，密钥存服务器端），' +
+        '或在本机运行 node server.js 后使用本地代理模式。'
+      );
+    }
+    return data.content || '(模型返回了空内容)';
+  }
+
+  // —— 浏览器直连模式（仅对明确支持 CORS 的服务商生效，如 OpenRouter / Google Gemini）——
+  return await callDirectApi(systemPrompt, userContent);
+}
+
+// 浏览器直连（不经过任何代理，依赖服务商开启 CORS）
+async function callDirectApi(systemPrompt, userContent) {
+  const body = {
+    model: apiConfig.model,
+    messages: [
+      { role: 'system', content: systemPrompt },
+      { role: 'user',   content: userContent },
+    ],
+    temperature: apiConfig.temperature,
+    max_tokens: getEffectiveMaxTokens(),
+    max_completion_tokens: getEffectiveMaxTokens(),
+    stream: false,
+  };
+
+  // Google Gemini 原生格式
+  if (getApiFormat() === 'gemini') {
+    const url = apiConfig.endpoint.replace(/\/+$/, '') + '/' + apiConfig.model + ':generateContent?key=' + encodeURIComponent(apiConfig.apiKey);
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        systemInstruction: { parts: [{ text: systemPrompt }] },
+        contents: [{ role: 'user', parts: [{ text: userContent }] }],
+        generationConfig: { temperature: apiConfig.temperature, maxOutputTokens: Math.min(getEffectiveMaxTokens(), 8192) },
+      }),
+    });
+    if (!res.ok) {
+      const errData = await res.json().catch(() => ({}));
+      const errMsg = errData.error?.message || errData.message || JSON.stringify(errData).slice(0, 200) || ('HTTP ' + res.status);
+      throw new Error('[' + res.status + '] ' + errMsg);
+    }
+    const data = await res.json();
+    return data.candidates?.[0]?.content?.parts?.[0]?.text || '(模型返回了空内容)';
+  }
+
+  // OpenAI 兼容格式（DeepSeek / OpenAI / OpenRouter / 商汤 Token 等）
+  const endpoint = apiConfig.endpoint + '/chat/completions';
+  const res = await fetch(endpoint, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer ' + apiConfig.apiKey,
+    },
+    body: JSON.stringify(body),
+  });
+
+  if (!res.ok) {
+    const errData = await res.json().catch(() => ({}));
+    const errMsg = errData.error?.message || errData.message || errData.error_msg || JSON.stringify(errData).slice(0, 200) || ('HTTP ' + res.status);
+    throw new Error('[' + res.status + '] ' + errMsg);
+  }
+
+  const data = await res.json();
+  return data.choices?.[0]?.message?.content || '(模型返回了空内容)';
+}
+
+// ===== 构建工具 Prompt（方法论存于后端，前端只持 UI 元数据）=====
+// 本地只负责拼接「用户内容」；systemPrompt 由后端 /api/build 凭令牌返回（含机密方法论）。
+async function buildToolPromptRemote(tool, formData) {
+  // 用户提示：拼接表单数据（非机密，纯用户输入）
+  const parts = [];
+  for (const [key, value] of Object.entries(formData)) {
+    if (value) {
+      const labels = {
+        text: '课文/语篇文本', essay: '学生作文', content: '输入内容', data: '数据',
+        topic: '作文题目/要求', note: '补充说明', type: '课型', level: '学生水平/学情',
+        mode: '分析模式', count: '题目数量', ratio: '有词/无词比例',
+        fullScore: '满分', style: '排版风格', grade: '年级/学段', genre: '文本体裁', theme: '立意导向',
+      };
+      const label = labels[key] || key;
+      parts.push('【' + label + '】\n' + value);
+    }
+  }
+  const userContent = parts.length > 0 ? parts.join('\n\n') : '（用户未提供具体内容，请给出使用示例）';
+
+  // 向后端请求 systemPrompt（meta 仅为 UI 可见的公开信息，机密 prompt 不落地前端）
+  const meta = { name: tool.name, desc: tool.desc, tags: tool.tags, cat: tool.cat };
+  const base = (apiConfig.backend || '').replace(/\/+$/, '');
+  const url = base ? base + '/api/build' : '/api/build';
+  let res;
+  try {
+    res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token: apiConfig.token || 'local-dev', toolId: tool.id, meta }),
+    });
+  } catch (e) {
+    throw new Error('无法连接工具后端（' + url + '），请在设置中检查「后端地址」。' + e.message);
+  }
+  if (!res.ok) {
+    let msg = '获取工具提示词失败（HTTP ' + res.status + '）';
+    try { const d = await res.json(); if (d && d.error && d.error.message) msg = d.error.message; } catch (_) {}
+    if (res.status === 401) msg += ' 请在设置中填写正确的「工作台访问令牌」。';
+    throw new Error(msg);
+  }
+  const data = await res.json();
+  if (!data.systemPrompt) throw new Error('后端未返回有效的 systemPrompt');
+  return { systemPrompt: data.systemPrompt, userContent };
+}
+
+// ===== 嵌套列表渲染（支持缩进多层级）=====
+function buildNestedLists(text) {
+  const lines = text.split('\n');
+  let result = '';
+  let i = 0;
+  function parseList(baseIndent, ordered) {
+    let html = ordered
+      ? '<ol style="margin:6px 0;padding-left:22px;">'
+      : '<ul style="margin:6px 0;padding-left:22px;">';
+    while (i < lines.length) {
+      const line = lines[i];
+      if (!line.trim()) { i++; continue; }
+      const m = line.match(/^(\s*)([-*]|\d+\.)\s+(.*)$/);
+      if (!m) break;
+      const indent = m[1].length;
+      if (indent < baseIndent) break;
+      if (indent > baseIndent) break; // 不应在此层级出现
+      const content = m[3];
+      i++;
+      let childHtml = '';
+      if (i < lines.length) {
+        const cm = lines[i].match(/^(\s*)([-*]|\d+\.)\s+/);
+        if (cm && cm[1].length > baseIndent) {
+          childHtml = parseList(cm[1].length, /^\d+\./.test(cm[2]));
+        }
+      }
+      html += '<li style="margin:4px 0;">' + content + childHtml + '</li>';
+    }
+    html += ordered ? '</ol>' : '</ul>';
+    return html;
+  }
+  while (i < lines.length) {
+    const line = lines[i];
+    const m = line.match(/^(\s*)([-*]|\d+\.)\s+/);
+    if (m) {
+      result += parseList(m[1].length, /^\d+\./.test(m[2]));
+    } else {
+      result += lines[i] + '\n';
+      i++;
+    }
+  }
+  return result;
+}
+
+// ===== 简易 Markdown 渲染 =====
+function renderMarkdown(md) {
+  if (!md) return '';
+  let html = md;
+  // 代码块
+  html = html.replace(/```(\w*)\n([\s\S]*?)```/g, '<pre style="background:#1e1e2e;color:#cdd6f4;padding:14px;border-radius:8px;overflow-x:auto;font-size:13px;margin:10px 0;"><code>$2</code></pre>');
+  // 标题
+  html = html.replace(/^### (.+)$/gm, '<h4 style="margin:16px 0 8px;font-size:15px;">$1</h4>');
+  html = html.replace(/^## (.+)$/gm, '<h3 style="margin:18px 0 10px;font-size:17px;">$1</h3>');
+  html = html.replace(/^# (.+)$/gm, '<h2 style="margin:20px 0 12px;font-size:19px;">$1</h2>');
+  // 粗体和斜体
+  html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+  html = html.replace(/\*(.+?)\*/g, '<em>$1</em>');
+  // 表格
+  html = html.replace(/^\|(.+)\|$/gm, (match) => {
+    const cells = match.split('|').filter(c => c.trim());
+    return '<tr>' + cells.map(c => '<td style="border:1px solid var(--border);padding:6px 10px;font-size:13px;">' + c.trim() + '</td>').join('') + '</tr>';
+  });
+  html = html.replace(/(<tr>[\s\S]*?<\/tr>\n?)+/g, (match) => '<table style="border-collapse:collapse;width:100%;margin:10px 0;">' + match + '</table>');
+  // 列表（支持缩进嵌套）
+  html = buildNestedLists(html);
+  // 换行
+  html = html.replace(/\n/g, '<br>');
+  return html;
+}
+
+function init() { applyAppearance(); applyBackground(); renderFilterTabs(); renderTools(); renderIndex(); updateSectionTitle(); updateSettingsButton(); }
+init();
+</script>
+</body>
+</html>
