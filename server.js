@@ -58,6 +58,32 @@ const CATEGORY_NAMES = {
 // 本地未设置时回落为 'local-dev'（仅本地开发用，便于免配置运行）。
 const ACCESS_TOKEN = process.env.WORKBENCH_TOKEN || 'local-dev';
 
+// —— 轻量访问统计（服务端汇总，持久化到 stats.json）——
+// 注意：Render 免费档磁盘为临时盘，重新部署会回退到 git 中的基线值；
+// 在同一次部署存活期内（含休眠唤醒）计数准确。适合查看“大概浏览量”。
+const STATS_FILE = path.join(ROOT, 'stats.json');
+let stats = { total: 0, today: 0, date: new Date().toISOString().slice(0, 10) };
+try {
+  const s = JSON.parse(fs.readFileSync(STATS_FILE, 'utf8'));
+  if (s && typeof s.total === 'number') stats = s;
+} catch {}
+function todayStr() { return new Date().toISOString().slice(0, 10); }
+let lastStatsSave = 0;
+function saveStats() {
+  const now = Date.now();
+  if (now - lastStatsSave < 5000) return; // 5s 节流，避免频繁 IO
+  lastStatsSave = now;
+  try { fs.writeFileSync(STATS_FILE, JSON.stringify(stats)); } catch {}
+}
+function bumpStats() {
+  const t = todayStr();
+  if (stats.date !== t) { stats.date = t; stats.today = 0; }
+  stats.total += 1;
+  stats.today += 1;
+  saveStats();
+  return { total: stats.total, today: stats.today, date: stats.date };
+}
+
 function sendError(res, code, msg) {
   res.writeHead(code, { 'Content-Type': 'application/json' });
   res.end(JSON.stringify({ error: { message: msg } }));
@@ -202,6 +228,18 @@ const server = http.createServer(async (req, res) => {
     }));
     res.writeHead(200, { 'Content-Type': 'application/json' });
     return res.end(JSON.stringify({ providers: list }));
+  }
+
+  // —— 轻量访问统计接口 ——
+  if (req.method === 'POST' && pathname === '/api/track') {
+    const r = bumpStats();
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    return res.end(JSON.stringify(r));
+  }
+  if (req.method === 'GET' && pathname === '/api/stats') {
+    if (stats.date !== todayStr()) { stats.date = todayStr(); stats.today = 0; }
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    return res.end(JSON.stringify({ total: stats.total, today: stats.today, date: stats.date }));
   }
 
   // 静态文件

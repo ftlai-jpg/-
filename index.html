@@ -850,6 +850,8 @@
       border-top: 1px dashed var(--border);
     }
     .footer-brand { margin-top: 18px; }
+    .view-stat { margin-top: 10px; font-size: 13px; color: var(--text-muted); letter-spacing: .3px; }
+    .view-stat #viewCounter { display: inline-flex; align-items: center; gap: 4px; }
 
     /* ===== Header Settings Button ===== */
     .header-settings-btn {
@@ -1261,6 +1263,7 @@
     <p class="guide-foot">提示：首次使用请先点击右上角 ⚙️ 配置 API（本地代理或云端安全代理），否则为演示模式。</p>
   </div>
   <p class="footer-brand">跟着肯尼学英语 · 智能教育工具集</p>
+  <div class="view-stat"><span id="viewCounter">👁 访问统计加载中…</span></div>
 </footer>
 
 <!-- ===== API Settings Modal ===== -->
@@ -3208,6 +3211,23 @@ function renderMarkdown(md) {
 
 function init() { applyAppearance(); applyBackground(); renderFilterTabs(); renderTools(); renderIndex(); updateSectionTitle(); updateSettingsButton(); }
 init();
+
+// —— 浏览量统计（会话级去重：同一标签页只上报一次，避免刷新刷爆）——
+(function () {
+  try {
+    if (sessionStorage.getItem('wb_view_tracked')) return;
+    sessionStorage.setItem('wb_view_tracked', '1');
+    fetch('/api/track', { method: 'POST' })
+      .then(r => r.json())
+      .then(d => {
+        const el = document.getElementById('viewCounter');
+        if (el && d && typeof d.total === 'number') {
+          el.textContent = '👁 总访问 ' + d.total + ' 次 · 今日 ' + d.today + ' 次';
+        }
+      })
+      .catch(() => {});
+  } catch (e) {}
+})();
 </script>
 </body>
 </html>

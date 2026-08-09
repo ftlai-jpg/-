@@ -10,6 +10,9 @@ node_modules/
 *.log
 npm-debug.log*
 
+# 运行时访问统计（Render 临时盘，不提交；部署时由 server 自动从 0 初始化）
+stats.json
+
 # 系统文件
 .DS_Store
 Thumbs.db
