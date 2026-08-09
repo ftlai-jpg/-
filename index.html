@@ -1152,6 +1152,29 @@
       .header-nav a.active { background: var(--primary-bg); color: var(--primary); }
     }
 
+    /* 左侧选工具 → 右侧跟随高亮（柔和动画） */
+    @keyframes toolSelectPulse {
+      0%   { transform: scale(1);     box-shadow: 0 0 0 0 rgba(30,136,229,0); }
+      45%  { transform: scale(1.025); box-shadow: 0 0 0 7px rgba(30,136,229,.30); }
+      100% { transform: scale(1);     box-shadow: 0 0 0 3px var(--primary-light), var(--shadow-lg); }
+    }
+    @keyframes idxSelectPulse {
+      0%   { transform: scale(1); }
+      50%  { transform: scale(1.05); }
+      100% { transform: scale(1); }
+    }
+    .tool-card { scroll-margin-top: 88px; }
+    .tool-card.selected {
+      box-shadow: 0 0 0 3px var(--primary-light), var(--shadow-lg);
+      animation: toolSelectPulse .5s cubic-bezier(.34, 1.3, .64, 1);
+    }
+    .idx-item { transition: background .28s ease, color .28s ease; }
+    .idx-item.active {
+      background: var(--primary); color: #fff;
+      animation: idxSelectPulse .4s ease;
+    }
+    .idx-item.active .idx-item-icon { filter: brightness(1.5); }
+
     /* ===== Responsive ===== */
     @media (max-width: 768px) {
       .header { padding: 0 12px; }
