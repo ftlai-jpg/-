@@ -44,17 +44,21 @@
     html { scroll-behavior: smooth; }
     #tools, #about { scroll-margin-top: 76px; }
 
-    /* 自定义背景图片：半透明白遮罩保证内容可读，整页固定铺满
+    /* 自定义背景图片：用固定图层 #bgLayer 承载，移动端/iOS 原生支持，
+       且不会因页面变长而拉伸错位（避免 background-attachment:fixed 在手机上失效）
        --bg-overlay / --bg-position 由 JS 按所选背景动态设置 */
-    body.has-photo {
+    #bgLayer {
+      position: fixed;
+      inset: 0;
+      z-index: -1;
       background-color: #eef2f6;
       background-image:
         linear-gradient(rgba(255,255,255,var(--bg-overlay,0.55)), rgba(255,255,255,var(--bg-overlay,0.55))),
         var(--bg-photo, none);
       background-size: cover;
       background-position: var(--bg-position, center);
-      background-attachment: fixed;
       background-repeat: no-repeat;
+      pointer-events: none;
     }
 
     a { text-decoration: none; color: inherit; }
@@ -1196,6 +1200,9 @@
   </style>
 </head>
 <body>
+
+<!-- 固定背景图层：承载用户选择的背景图，移动端/iOS 原生支持、不会拉伸 -->
+<div id="bgLayer"></div>
 
 <!-- ===== Header ===== -->
 <header class="header">
