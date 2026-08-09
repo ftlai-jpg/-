@@ -71,6 +71,11 @@ try {
   if (s && typeof s.total === 'number') stats = s;
 } catch {}
 function todayStr() { return new Date().toISOString().slice(0, 10); }
+
+// 去重：同一 IP 在冷却期内（默认 30 分钟）只计一次访问，
+// 近似“独立访客/会话”，比前端 sessionStorage 去重更准（不受多标签/重开影响）。
+const VISIT_COOLDOWN = 30 * 60 * 1000;
+const recentIps = new Map(); // ip -> 上次计数的时间戳(ms)
 let lastStatsSave = 0;
 function saveStats() {
   const now = Date.now();
@@ -78,14 +83,32 @@ function saveStats() {
   lastStatsSave = now;
   try { fs.writeFileSync(STATS_FILE, JSON.stringify(stats)); } catch {}
 }
-function bumpStats() {
+function getClientIp(req) {
+  const xff = req.headers['x-forwarded-for'];
+  if (xff) return xff.split(',')[0].trim();
+  return req.socket.remoteAddress || 'unknown';
+}
+function bumpStats(req) {
+  const ip = getClientIp(req);
+  const now = Date.now();
+  const last = recentIps.get(ip) || 0;
+  if (now - last < VISIT_COOLDOWN) {
+    // 冷却期内：不计入新访问，仅返回当前计数（避免同一人反复刷新/多标签虚高）
+    return { total: stats.total, today: stats.today, date: stats.date, counted: false };
+  }
+  recentIps.set(ip, now);
   const t = todayStr();
   if (stats.date !== t) { stats.date = t; stats.today = 0; }
   stats.total += 1;
   stats.today += 1;
   saveStats();
-  return { total: stats.total, today: stats.today, date: stats.date };
+  return { total: stats.total, today: stats.today, date: stats.date, counted: true };
 }
+// 定时清理过期 IP 记录，避免内存无限增长（仅保留 24h 内的去重状态）
+setInterval(() => {
+  const cutoff = Date.now() - 24 * 60 * 60 * 1000;
+  for (const [ip, ts] of recentIps) if (ts < cutoff) recentIps.delete(ip);
+}, 60 * 60 * 1000);
 
 function sendError(res, code, msg) {
   res.writeHead(code, { 'Content-Type': 'application/json' });
@@ -235,7 +258,7 @@ const server = http.createServer(async (req, res) => {
 
   // —— 轻量访问统计接口 ——
   if (req.method === 'POST' && pathname === '/api/track') {
-    const r = bumpStats();
+    const r = bumpStats(req);
     res.writeHead(200, { 'Content-Type': 'application/json' });
     return res.end(JSON.stringify(r));
   }

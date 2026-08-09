@@ -3349,27 +3349,33 @@ function init() { applyAppearance(); applyBackground(); renderFilterTabs(); rend
 init();
 
 // —— 浏览量统计 ——
-// 每次加载先 GET /api/stats 填充（不计数，刷新也显示真实值）；
-// 再用 POST /api/track 计数（会话级去重，避免刷新刷爆），并更新面板。
+// 每次加载先 GET /api/stats 填充（刷新也显示真实值）；
+// 再 POST /api/track 计数。去重改在服务端按 IP + 冷却期处理，
+// 因此这里不再用 sessionStorage（更准：不受多标签/重开影响）。
 (function () {
-  function fill(d, animate) {
+  let lastTotal = null, lastToday = null;
+  function fill(d) {
     if (!d || typeof d.total !== 'number') return;
     const vc = document.getElementById('viewCounter');
     if (vc) vc.textContent = '👁 总访问 ' + d.total + ' 次 · 今日 ' + d.today + ' 次';
     const t = document.getElementById('statTotal');
     const td = document.getElementById('statToday');
-    if (t) { if (animate) { t.classList.add('bump'); setTimeout(() => t.classList.remove('bump'), 200); } t.textContent = d.total; }
-    if (td) { if (animate) { td.classList.add('bump'); setTimeout(() => td.classList.remove('bump'), 200); } td.textContent = d.today; }
+    if (t) {
+      if (lastTotal !== null && d.total !== lastTotal) { t.classList.add('bump'); setTimeout(() => t.classList.remove('bump'), 200); }
+      t.textContent = d.total;
+    }
+    if (td) {
+      if (lastToday !== null && d.today !== lastToday) { td.classList.add('bump'); setTimeout(() => td.classList.remove('bump'), 200); }
+      td.textContent = d.today;
+    }
+    lastTotal = d.total; lastToday = d.today;
   }
   try {
-    fetch('/api/stats').then(r => r.json()).then(d => fill(d, false)).catch(() => {});
-    if (!sessionStorage.getItem('wb_view_tracked')) {
-      sessionStorage.setItem('wb_view_tracked', '1');
-      fetch('/api/track', { method: 'POST' })
-        .then(r => r.json())
-        .then(d => fill(d, true))
-        .catch(() => {});
-    }
+    fetch('/api/stats').then(r => r.json()).then(d => fill(d)).catch(() => {});
+    fetch('/api/track', { method: 'POST' })
+      .then(r => r.json())
+      .then(d => fill(d))
+      .catch(() => {});
   } catch (e) {}
 })();
 </script>
