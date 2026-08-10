@@ -42,7 +42,7 @@
       -webkit-font-smoothing: antialiased;
     }
     html { scroll-behavior: smooth; }
-    #tools, #about { scroll-margin-top: 76px; }
+    #tools { scroll-margin-top: 76px; }
 
     /* 自定义背景图片：用固定图层 #bgLayer 承载，移动端/iOS 原生支持，
        且不会因页面变长而拉伸错位（避免 background-attachment:fixed 在手机上失效）
@@ -1282,6 +1282,7 @@
     .modal-share:active { transform: scale(0.92); }
 
     .share-modal { max-width: 460px; }
+    .info-modal { max-width: 600px; }
     .share-check {
       display: flex;
       align-items: center;
@@ -1316,8 +1317,8 @@
   </div>
   <nav class="header-nav">
     <a href="#tools" class="active">全部工具</a>
-    <a href="#about">使用指南</a>
-    <a href="#about">关于</a>
+    <a onclick="openGuide();return false;">使用指南</a>
+    <a onclick="openAbout();return false;">关于</a>
   </nav>
   <button class="header-settings-btn" onclick="openSettings()" title="API 设置">
     <span id="settingsIcon">⚙️</span>
@@ -1325,8 +1326,8 @@
   <button class="header-menu-btn" onclick="toggleMobileMenu()" aria-label="菜单">☰</button>
   <div class="mobile-menu" id="mobileMenu">
     <a href="#tools" onclick="closeMobileMenu()">全部工具</a>
-    <a href="#about" onclick="closeMobileMenu()">使用指南</a>
-    <a href="#about" onclick="closeMobileMenu()">关于</a>
+    <a href="#" onclick="closeMobileMenu();openGuide();return false;">使用指南</a>
+    <a href="#" onclick="closeMobileMenu();openAbout();return false;">关于</a>
   </div>
 </header>
 
@@ -1335,7 +1336,7 @@
   <div class="hero-content">
     <h1>跟着肯尼学英语</h1>
     <p>80+ 智能教学工具</p>
-    <a href="#about" class="hero-cta">📖 查看使用指南</a>
+    <a href="#" class="hero-cta" onclick="openGuide();return false;">📖 查看使用指南</a>
   </div>
 </section>
 
@@ -1418,40 +1419,63 @@
   </div>
 </div>
 
-<!-- ===== Footer / 使用指南 ===== -->
-<footer class="footer" id="about">
-  <div class="guide-wrap">
-    <h2 class="guide-title">📖 使用指南</h2>
-    <p class="guide-lead">三步搞定教学准备，从想法到可直接进教室的方案：</p>
-    <div class="guide-steps">
-      <div class="guide-step">
-        <div class="guide-num">1</div>
-        <div class="guide-body">
-          <div class="guide-h">选工具</div>
-          <div class="guide-d">在左侧「工具索引」里按分类（课前备课 / 阅读教学 / 写作教学 …）点开折叠列表，挑一个适合当前任务的工具。</div>
-        </div>
-      </div>
-      <div class="guide-step">
-        <div class="guide-num">2</div>
-        <div class="guide-body">
-          <div class="guide-h">填内容</div>
-          <div class="guide-d">在弹出的窗口中按提示粘贴课文、题目、作文或语篇文本，按需补充年级 / 水平等字段，越具体产出越贴合。</div>
-        </div>
-      </div>
-      <div class="guide-step">
-        <div class="guide-num">3</div>
-        <div class="guide-body">
-          <div class="guide-h">点运行</div>
-          <div class="guide-d">点击「▶ 运行工具」，AI 一键生成结构化教学方案；可复制、可继续追问调整。</div>
-        </div>
-      </div>
-    </div>
-    <p class="guide-foot">提示：首次使用请先点击右上角 ⚙️ 配置 API（本地代理或云端安全代理），否则为演示模式。</p>
-  </div>
+<!-- ===== Footer ===== -->
+<footer class="footer">
+  <p class="footer-brand">跟着肯尼学英语 · 智能教育工具集</p>
+  <div class="view-stat"><span id="viewCounter">👁 访问统计加载中…</span></div>
+</footer>
 
-    <!-- 关注公众号 -->
-    <div class="wx-card">
-      <div class="wx-card-head">📢 关注公众号 · 跟着肯尼学英语</div>
+<!-- ===== 使用指南 弹窗 ===== -->
+<div class="modal-overlay" id="guideOverlay" onclick="if(event.target===this)closeGuide()">
+  <div class="modal info-modal">
+    <div class="modal-header">
+      <div class="tool-icon" style="background:var(--accent);">📖</div>
+      <h2>使用指南</h2>
+      <button class="modal-close" onclick="closeGuide()">✕</button>
+    </div>
+    <div class="modal-body">
+      <p class="guide-lead">三步搞定教学准备，从想法到可直接进教室的方案：</p>
+      <div class="guide-steps">
+        <div class="guide-step">
+          <div class="guide-num">1</div>
+          <div class="guide-body">
+            <div class="guide-h">选工具</div>
+            <div class="guide-d">在左侧「工具索引」里按分类（课前备课 / 阅读教学 / 写作教学 …）点开折叠列表，挑一个适合当前任务的工具。</div>
+          </div>
+        </div>
+        <div class="guide-step">
+          <div class="guide-num">2</div>
+          <div class="guide-body">
+            <div class="guide-h">填内容</div>
+            <div class="guide-d">在弹出的窗口中按提示粘贴课文、题目、作文或语篇文本，按需补充年级 / 水平等字段，越具体产出越贴合。</div>
+          </div>
+        </div>
+        <div class="guide-step">
+          <div class="guide-num">3</div>
+          <div class="guide-body">
+            <div class="guide-h">点运行</div>
+            <div class="guide-d">点击「▶ 运行工具」，AI 一键生成结构化教学方案；可复制、可继续追问调整。</div>
+          </div>
+        </div>
+      </div>
+      <p class="guide-foot">提示：首次使用请先点击右上角 ⚙️ 配置 API（本地代理或云端安全代理），否则为演示模式。</p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeGuide()">关闭</button>
+      <button class="btn btn-primary" onclick="closeGuide();openSettings();">⚙️ 配置 API</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 关于 / 公众号 弹窗 ===== -->
+<div class="modal-overlay" id="aboutOverlay" onclick="if(event.target===this)closeAbout()">
+  <div class="modal info-modal">
+    <div class="modal-header">
+      <div class="tool-icon" style="background:var(--accent);">📢</div>
+      <h2>关于 · 跟着肯尼学英语</h2>
+      <button class="modal-close" onclick="closeAbout()">✕</button>
+    </div>
+    <div class="modal-body">
       <p class="wx-card-desc">欢迎关注「跟着肯尼学英语」！这里持续分享英语教学干货、阅读圈 / 续作 / 词汇复习等方法论，以及本工作台的工具更新。微信扫一扫或长按识别下方二维码即可关注 👇</p>
       <div class="wx-qr">
         <img class="wx-qr-img" src="assets/wechat-qr.png" alt="公众号「跟着肯尼学英语」二维码" onerror="wxQrFail(this)">
@@ -1459,10 +1483,11 @@
       </div>
       <p class="wx-card-tip">微信扫一扫或长按识别上方二维码，关注「跟着肯尼学英语」获取最新教学干货与工具更新。</p>
     </div>
-
-  <p class="footer-brand">跟着肯尼学英语 · 智能教育工具集</p>
-  <div class="view-stat"><span id="viewCounter">👁 访问统计加载中…</span></div>
-</footer>
+    <div class="modal-footer">
+      <button class="btn btn-primary" onclick="closeAbout()">知道了</button>
+    </div>
+  </div>
+</div>
 
 <!-- ===== API Settings Modal ===== -->
 <div class="settings-modal" id="settingsModal">
@@ -2759,6 +2784,22 @@ function closeShare() {
   document.body.style.overflow = '';
 }
 
+function openGuide() {
+  document.getElementById('guideOverlay').classList.add('active');
+  document.body.style.overflow = 'hidden';
+}
+function closeGuide() {
+  document.getElementById('guideOverlay').classList.remove('active');
+  document.body.style.overflow = '';
+}
+function openAbout() {
+  document.getElementById('aboutOverlay').classList.add('active');
+  document.body.style.overflow = 'hidden';
+}
+function closeAbout() {
+  document.getElementById('aboutOverlay').classList.remove('active');
+  document.body.style.overflow = '';
+}
 function wxQrFail(img) {
   img.style.display = 'none';
   const ph = document.getElementById('wxQrPh');
