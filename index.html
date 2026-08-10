@@ -2317,10 +2317,10 @@ const TOOLS = [
     "id": "gaokao-volunteer",
     "cat": "selfstudy",
     "icon": "🎯",
-    "name": "高考志愿填报",
-    "tags": "浙江3+3冲稳保垫可视化",
-    "desc": "「高考志愿填报四步法」，适配浙江「3+3」新高考模式（80 个专业平行志愿）。输入高考分数自动查位次、换算等位分、做冲稳保垫四梯度分配。",
-    "version": "v1.0"
+    "name": "高考志愿填报（广东）",
+    "tags": "广东3+1+2院校专业组冲稳保",
+    "desc": "广东新高考「3+1+2」志愿填报助手：输入选科、分数/位次与偏好，按院校专业组平行志愿生成冲/稳/保/垫四梯度参考方案，并附选科匹配与官方核验提示。",
+    "version": "v1.1"
   },
   {
     "id": "original-reading",
@@ -2424,6 +2424,17 @@ const TOOL_FORMS = {
     { label: '年级/学段', type: 'select', name: 'grade', options: ['高一', '高二', '高三'], required: true },
     { label: '学生水平/学情', type: 'select', name: 'level', options: ['基础薄弱', '中等水平', '拔尖培优'], required: false },
     { label: '立意导向（可选）', type: 'select', name: 'theme', options: ['不限定（智能推荐）', '温暖亲情', '善意传递', '成长感悟', '坚持与克服困难', '自我接纳'], required: false },
+  ],
+  'gaokao-volunteer': [
+    { label: '省份', type: 'select', name: 'province', options: ['广东', '其他（请在补充说明注明）'], required: true },
+    { label: '首选科目', type: 'select', name: 'prefer', options: ['物理', '历史'], required: true },
+    { label: '再选科目（两门）', type: 'input', name: 'reselect', placeholder: '如：化学+生物', required: true },
+    { label: '高考总分', type: 'input', name: 'score', placeholder: '如：580', required: true },
+    { label: '全省位次（选填）', type: 'input', name: 'rank', placeholder: '如：38000，有则更准' },
+    { label: '意向城市（选填）', type: 'input', name: 'city', placeholder: '如：广州、深圳、大湾区' },
+    { label: '意向专业/方向（选填）', type: 'input', name: 'major', placeholder: '如：计算机、电子信息、临床医学' },
+    { label: '更看重', type: 'select', name: 'priority', options: ['学校层次', '专业实力', '所在城市', '就业前景'], required: true },
+    { label: '补充说明（选填）', type: 'input', name: 'note', placeholder: '如：家庭经济情况、是否接受调剂等' },
   ],
 };
 
@@ -3525,6 +3536,8 @@ async function buildToolPromptRemote(tool, formData) {
         topic: '作文题目/要求', note: '补充说明', type: '课型', level: '学生水平/学情',
         mode: '分析模式', count: '题目数量', ratio: '有词/无词比例',
         fullScore: '满分', style: '排版风格', grade: '年级/学段', genre: '文本体裁', theme: '立意导向',
+        province: '省份', prefer: '首选科目', reselect: '再选科目', score: '高考总分', rank: '全省位次',
+        city: '意向城市', major: '意向专业方向', priority: '更看重',
       };
       const label = labels[key] || key;
       parts.push('【' + label + '】\n' + value);
