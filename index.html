@@ -860,6 +860,69 @@
     .view-stat { margin-top: 10px; font-size: 13px; color: var(--text-muted); letter-spacing: .3px; }
     .view-stat #viewCounter { display: inline-flex; align-items: center; gap: 4px; }
 
+    /* ===== 关注公众号卡片（Footer 内） ===== */
+    .wx-card {
+      max-width: 880px;
+      margin: 0 auto 24px;
+      padding: 30px 28px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-sm);
+      text-align: center;
+    }
+    .wx-card-head {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--primary-dark);
+      margin-bottom: 10px;
+    }
+    .wx-card-desc {
+      font-size: 14px;
+      color: var(--text-secondary);
+      line-height: 1.65;
+      max-width: 620px;
+      margin: 0 auto 18px;
+    }
+    .wx-qr {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 12px;
+    }
+    .wx-qr-img {
+      width: 180px;
+      height: 180px;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border-light);
+      background: #fff;
+      object-fit: contain;
+      box-shadow: var(--shadow-sm);
+    }
+    .wx-qr-ph {
+      width: 180px; height: 180px;
+      border-radius: var(--radius-md);
+      border: 2px dashed var(--border);
+      background: var(--bg);
+      color: var(--text-muted);
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      font-size: 14px; line-height: 1.6; text-align: center;
+    }
+    .wx-qr-ph b { color: var(--text-secondary); font-size: 15px; margin: 4px 0; }
+    .wx-qr-ph span { font-size: 12px; }
+    .wx-card-tip {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin: 0;
+    }
+    .wx-card-tip code {
+      background: var(--bg);
+      padding: 1px 6px;
+      border-radius: 4px;
+      font-size: 11px;
+    }
+
     /* 左侧栏底部：网站访问统计面板 */
     .sidebar-stats {
       margin-top: 14px; padding: 12px 14px; border-radius: var(--radius-md);
@@ -1385,6 +1448,18 @@
     </div>
     <p class="guide-foot">提示：首次使用请先点击右上角 ⚙️ 配置 API（本地代理或云端安全代理），否则为演示模式。</p>
   </div>
+
+    <!-- 关注公众号 -->
+    <div class="wx-card">
+      <div class="wx-card-head">📢 关注公众号 · 跟着肯尼学英语</div>
+      <p class="wx-card-desc">欢迎关注「跟着肯尼学英语」！这里持续分享英语教学干货、阅读圈 / 续作 / 词汇复习等方法论，以及本工作台的工具更新。微信扫一扫或长按识别下方二维码即可关注 👇</p>
+      <div class="wx-qr">
+        <img class="wx-qr-img" src="assets/wechat-qr.png" alt="公众号「跟着肯尼学英语」二维码" onerror="wxQrFail(this)">
+        <div class="wx-qr-ph" id="wxQrPh" style="display:none;">📱<br><b>公众号二维码</b><br><span>将图片放到 assets/wechat-qr.png</span></div>
+      </div>
+      <p class="wx-card-tip">把公众号二维码图片命名为 <code>wechat-qr.png</code> 放到 <code>deploy/assets/</code> 目录即可自动显示。</p>
+    </div>
+
   <p class="footer-brand">跟着肯尼学英语 · 智能教育工具集</p>
   <div class="view-stat"><span id="viewCounter">👁 访问统计加载中…</span></div>
 </footer>
@@ -2682,6 +2757,12 @@ function copyShareLink() {
 function closeShare() {
   document.getElementById('shareOverlay').classList.remove('active');
   document.body.style.overflow = '';
+}
+
+function wxQrFail(img) {
+  img.style.display = 'none';
+  const ph = document.getElementById('wxQrPh');
+  if (ph) ph.style.display = 'flex';
 }
 
 async function runTool() {
