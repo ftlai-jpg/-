@@ -76,13 +76,14 @@ function todayStr() { return new Date().toISOString().slice(0, 10); }
 // 近似“独立访客/会话”，比前端 sessionStorage 去重更准（不受多标签/重开影响）。
 const VISIT_COOLDOWN = 30 * 60 * 1000;
 const recentIps = new Map(); // ip -> 上次计数的时间戳(ms)
-let lastStatsSave = 0;
-function saveStats() {
-  const now = Date.now();
-  if (now - lastStatsSave < 5000) return; // 5s 节流，避免频繁 IO
-  lastStatsSave = now;
+// 每次计数立即落盘（去掉 5s 节流），最大限度避免免费档实例被回收前内存计数丢失
+function flushStats() {
   try { fs.writeFileSync(STATS_FILE, JSON.stringify(stats)); } catch {}
 }
+function saveStats() { flushStats(); }
+// 实例被 Render 回收（SIGTERM/SIGINT）前，先把内存计数写回磁盘，减少丢数
+process.on('SIGTERM', () => { flushStats(); process.exit(0); });
+process.on('SIGINT',  () => { flushStats(); process.exit(0); });
 function getClientIp(req) {
   const xff = req.headers['x-forwarded-for'];
   if (xff) return xff.split(',')[0].trim();
