@@ -1199,6 +1199,45 @@
       .sidebar { position: static; width: 100%; flex: none; max-height: none; }
       .tool-index { max-height: 52vh; overflow-y: auto; }
     }
+    /* ===== 分享 / 转发 ===== */
+    .modal-share {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: var(--transition);
+      margin-right: 4px;
+    }
+    .modal-share:hover { background: var(--bg); color: var(--primary); }
+    .modal-share:active { transform: scale(0.92); }
+
+    .share-modal { max-width: 460px; }
+    .share-check {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 14px;
+      color: var(--text-secondary);
+      margin: 6px 0 4px;
+      cursor: pointer;
+    }
+    .share-check input { width: 16px; height: 16px; accent-color: var(--primary); }
+    .share-tip {
+      font-size: 12px;
+      color: var(--text-muted);
+      background: var(--bg);
+      border-radius: var(--radius-sm);
+      padding: 8px 10px;
+      margin-top: 6px;
+      line-height: 1.5;
+    }
   </style>
 </head>
 <body>
@@ -1279,6 +1318,7 @@
     <div class="modal-header">
       <div class="tool-icon" id="modalIcon"></div>
       <h2 id="modalTitle"></h2>
+      <button class="modal-share" onclick="openShare()" title="分享 / 转发此工具">🔗</button>
       <button class="modal-close" onclick="closeModal()">✕</button>
     </div>
     <div class="modal-body" id="modalBody">
@@ -1287,6 +1327,30 @@
     <div class="modal-footer">
       <button class="btn btn-secondary" onclick="closeModal()">关闭</button>
       <button class="btn btn-primary" id="runBtn" onclick="runTool()">▶ 运行工具</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 分享 / 转发 面板 ===== -->
+<div class="modal-overlay" id="shareOverlay">
+  <div class="modal share-modal">
+    <div class="modal-header">
+      <div class="tool-icon" style="background:var(--accent);">🔗</div>
+      <h2>分享此工具</h2>
+      <button class="modal-close" onclick="closeShare()">✕</button>
+    </div>
+    <div class="modal-body">
+      <p class="modal-desc">把下面的链接发给同事或学生，对方打开后会自动定位并打开这个工具。</p>
+      <div class="form-group">
+        <label class="form-label">分享链接</label>
+        <input type="text" class="form-input" id="shareLink" readonly onclick="this.select()">
+      </div>
+      <label class="share-check"><input type="checkbox" id="shareWithInput" onchange="refreshShareLink()"> 携带我当前已填的输入内容</label>
+      <p class="share-tip" id="shareTip"></p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeShare()">关闭</button>
+      <button class="btn btn-primary" onclick="copyShareLink()">📋 复制链接</button>
     </div>
   </div>
 </div>
@@ -2514,7 +2578,7 @@ function onStarClick(toolId, el) {
   renderIndex();
 }
 
-function openTool(toolId) {
+function openTool(toolId, prefill) {
   const tool = getToolById(toolId);
   if (!tool) return;
   state.currentTool = tool;
@@ -2538,6 +2602,14 @@ function openTool(toolId) {
   });
   formHtml += '<div class="result-area" id="resultArea"><div class="result-header"><span class="result-title">生成结果</span><button class="btn btn-secondary" style="padding:6px 14px;font-size:13px;" onclick="copyResult()">📋 复制</button></div><div class="result-content" id="resultContent"></div></div>';
   body.innerHTML = formHtml;
+  if (prefill) {
+    formConfig.forEach(field => {
+      if (prefill[field.name] !== undefined && prefill[field.name] !== null) {
+        const el = body.querySelector('[name="' + field.name + '"]');
+        if (el) el.value = prefill[field.name];
+      }
+    });
+  }
   document.getElementById('modalOverlay').classList.add('active');
   document.body.style.overflow = 'hidden';
   addToHistory(toolId);
@@ -2547,6 +2619,69 @@ function closeModal() {
   document.getElementById('modalOverlay').classList.remove('active');
   document.body.style.overflow = '';
   state.currentTool = null;
+}
+
+function collectFormData() {
+  if (!state.currentTool) return {};
+  const tool = state.currentTool;
+  const formConfig = TOOL_FORMS[tool.id] || DEFAULT_FORM;
+  const body = document.getElementById('modalBody');
+  const formData = {};
+  formConfig.forEach(field => {
+    const el = body.querySelector('[name="' + field.name + '"]');
+    if (el) formData[field.name] = el.value.trim();
+  });
+  return formData;
+}
+
+function openShare() {
+  if (!state.currentTool) return;
+  refreshShareLink();
+  document.getElementById('shareOverlay').classList.add('active');
+  document.body.style.overflow = 'hidden';
+}
+
+function buildShareLink(includeInput) {
+  const base = location.origin + location.pathname + '?tool=' + encodeURIComponent(state.currentTool.id);
+  if (includeInput) {
+    const data = collectFormData();
+    const filtered = {};
+    Object.keys(data).forEach(k => { if (data[k]) filtered[k] = data[k]; });
+    if (Object.keys(filtered).length) {
+      const json = JSON.stringify(filtered);
+      const enc = btoa(unescape(encodeURIComponent(json)));
+      return base + '&d=' + encodeURIComponent(enc);
+    }
+  }
+  return base;
+}
+
+function refreshShareLink() {
+  const withInput = document.getElementById('shareWithInput').checked;
+  const link = buildShareLink(withInput);
+  document.getElementById('shareLink').value = link;
+  const tip = document.getElementById('shareTip');
+  if (withInput) {
+    tip.textContent = '已携带输入，链接较长（约 ' + link.length + ' 字符），适合通过聊天工具发送。';
+  } else {
+    tip.textContent = '仅分享工具本身，对方打开后需自己填写内容运行。';
+  }
+}
+
+function copyShareLink() {
+  const input = document.getElementById('shareLink');
+  input.select();
+  const done = () => showToast('链接已复制到剪贴板');
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(input.value).then(done).catch(() => { document.execCommand('copy'); done(); });
+  } else {
+    document.execCommand('copy'); done();
+  }
+}
+
+function closeShare() {
+  document.getElementById('shareOverlay').classList.remove('active');
+  document.body.style.overflow = '';
 }
 
 async function runTool() {
@@ -2670,8 +2805,9 @@ function showToast(message) {
 
 document.getElementById('searchInput').addEventListener('input', (e) => { state.searchKeyword = e.target.value; renderTools(); });
 document.getElementById('modalOverlay').addEventListener('click', (e) => { if (e.target.id === 'modalOverlay') closeModal(); });
+document.getElementById('shareOverlay').addEventListener('click', (e) => { if (e.target.id === 'shareOverlay') closeShare(); });
 document.getElementById('settingsModal').addEventListener('click', (e) => { if (e.target.id === 'settingsModal') closeSettings(); });
-document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { closeModal(); closeSettings(); } });
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { closeModal(); closeSettings(); closeShare(); } });
 
 // ===== API 预设服务商 =====
 const API_PRESETS = [
@@ -3371,6 +3507,27 @@ function renderMarkdown(md) {
 
 function init() { applyAppearance(); applyBackground(); renderFilterTabs(); renderTools(); renderIndex(); updateSectionTitle(); updateSettingsButton(); }
 init();
+
+// ===== 分享深链：打开 ?tool=id 自动定位并打开工具，&d= 携带预填输入 =====
+(function handleShareDeepLink() {
+  try {
+    const params = new URLSearchParams(location.search);
+    const toolParam = params.get('tool');
+    if (!toolParam) return;
+    const tool = getToolById(toolParam);
+    if (!tool) return;
+    let prefill = null;
+    const dParam = params.get('d');
+    if (dParam) {
+      try {
+        const json = decodeURIComponent(escape(atob(dParam)));
+        prefill = JSON.parse(json);
+      } catch (e) { prefill = null; }
+    }
+    selectTool(toolParam);
+    openTool(toolParam, prefill);
+  } catch (e) { /* 解析失败静默忽略，不影响正常使用 */ }
+})();
 
 // —— 浏览量统计 ——
 // 每次加载先 GET /api/stats 填充（刷新也显示真实值）；
