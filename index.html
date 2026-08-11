@@ -857,8 +857,6 @@
       border-top: 1px dashed var(--border);
     }
     .footer-brand { margin-top: 18px; }
-    .view-stat { margin-top: 10px; font-size: 13px; color: var(--text-muted); letter-spacing: .3px; }
-    .view-stat #viewCounter { display: inline-flex; align-items: center; gap: 4px; }
 
     /* ===== 关注公众号卡片（Footer 内） ===== */
     .wx-card {
@@ -922,25 +920,6 @@
       border-radius: 4px;
       font-size: 11px;
     }
-
-    /* 左侧栏底部：网站访问统计面板 */
-    .sidebar-stats {
-      margin-top: 14px; padding: 12px 14px; border-radius: var(--radius-md);
-      background: linear-gradient(135deg, var(--primary-bg), #fff);
-      border: 1px solid var(--border-light);
-    }
-    .sidebar-stats-title { font-size: 12px; font-weight: 600; color: var(--primary); margin-bottom: 8px; }
-    .sidebar-stats-grid { display: flex; gap: 10px; }
-    .ss-item {
-      flex: 1; text-align: center; background: #fff; border-radius: var(--radius-sm);
-      padding: 8px 4px; border: 1px solid var(--border-light);
-    }
-    .ss-num {
-      font-size: 20px; font-weight: 700; color: var(--text); line-height: 1.1;
-      font-variant-numeric: tabular-nums; transition: transform .12s cubic-bezier(0.4,0,0.2,1);
-    }
-    .ss-num.bump { transform: scale(1.18); color: var(--primary); }
-    .ss-label { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
 
     /* ===== Header Settings Button ===== */
     .header-settings-btn {
@@ -1345,13 +1324,6 @@
   <aside class="sidebar" id="sidebar">
     <div class="sidebar-title">📑 工具索引</div>
     <div class="tool-index" id="toolIndex"></div>
-    <div class="sidebar-stats" id="sidebarStats">
-      <div class="sidebar-stats-title">📊 网站访问统计</div>
-      <div class="sidebar-stats-grid">
-        <div class="ss-item"><div class="ss-num" id="statTotal">—</div><div class="ss-label">总访问</div></div>
-        <div class="ss-item"><div class="ss-num" id="statToday">—</div><div class="ss-label">今日</div></div>
-      </div>
-    </div>
   </aside>
 
   <main class="main" id="tools">
@@ -1422,7 +1394,6 @@
 <!-- ===== Footer ===== -->
 <footer class="footer">
   <p class="footer-brand">跟着肯尼学英语 · 智能教育工具集</p>
-  <div class="view-stat"><span id="viewCounter">👁 访问统计加载中…</span></div>
 </footer>
 
 <!-- ===== 使用指南 弹窗 ===== -->
@@ -3662,37 +3633,6 @@ init();
     selectTool(toolParam);
     openTool(toolParam, prefill);
   } catch (e) { /* 解析失败静默忽略，不影响正常使用 */ }
-})();
-
-// —— 浏览量统计 ——
-// 每次加载先 GET /api/stats 填充（刷新也显示真实值）；
-// 再 POST /api/track 计数。去重改在服务端按 IP + 冷却期处理，
-// 因此这里不再用 sessionStorage（更准：不受多标签/重开影响）。
-(function () {
-  let lastTotal = null, lastToday = null;
-  function fill(d) {
-    if (!d || typeof d.total !== 'number') return;
-    const vc = document.getElementById('viewCounter');
-    if (vc) vc.textContent = '👁 总访问 ' + d.total + ' 次 · 今日 ' + d.today + ' 次';
-    const t = document.getElementById('statTotal');
-    const td = document.getElementById('statToday');
-    if (t) {
-      if (lastTotal !== null && d.total !== lastTotal) { t.classList.add('bump'); setTimeout(() => t.classList.remove('bump'), 200); }
-      t.textContent = d.total;
-    }
-    if (td) {
-      if (lastToday !== null && d.today !== lastToday) { td.classList.add('bump'); setTimeout(() => td.classList.remove('bump'), 200); }
-      td.textContent = d.today;
-    }
-    lastTotal = d.total; lastToday = d.today;
-  }
-  try {
-    fetch('/api/stats').then(r => r.json()).then(d => fill(d)).catch(() => {});
-    fetch('/api/track', { method: 'POST' })
-      .then(r => r.json())
-      .then(d => fill(d))
-      .catch(() => {});
-  } catch (e) {}
 })();
 </script>
 </body>

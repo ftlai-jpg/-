@@ -61,55 +61,6 @@ const CATEGORY_NAMES = {
 // 本地未设置时回落为 'local-dev'（仅本地开发用，便于免配置运行）。
 const ACCESS_TOKEN = process.env.WORKBENCH_TOKEN || 'local-dev';
 
-// —— 轻量访问统计（服务端汇总，持久化到 stats.json）——
-// 注意：Render 免费档磁盘为临时盘，重新部署会回退到 git 中的基线值；
-// 在同一次部署存活期内（含休眠唤醒）计数准确。适合查看“大概浏览量”。
-const STATS_FILE = path.join(ROOT, 'stats.json');
-let stats = { total: 0, today: 0, date: new Date().toISOString().slice(0, 10) };
-try {
-  const s = JSON.parse(fs.readFileSync(STATS_FILE, 'utf8'));
-  if (s && typeof s.total === 'number') stats = s;
-} catch {}
-function todayStr() { return new Date().toISOString().slice(0, 10); }
-
-// 去重：同一 IP 在冷却期内（默认 30 分钟）只计一次访问，
-// 近似“独立访客/会话”，比前端 sessionStorage 去重更准（不受多标签/重开影响）。
-const VISIT_COOLDOWN = 30 * 60 * 1000;
-const recentIps = new Map(); // ip -> 上次计数的时间戳(ms)
-// 每次计数立即落盘（去掉 5s 节流），最大限度避免免费档实例被回收前内存计数丢失
-function flushStats() {
-  try { fs.writeFileSync(STATS_FILE, JSON.stringify(stats)); } catch {}
-}
-function saveStats() { flushStats(); }
-// 实例被 Render 回收（SIGTERM/SIGINT）前，先把内存计数写回磁盘，减少丢数
-process.on('SIGTERM', () => { flushStats(); process.exit(0); });
-process.on('SIGINT',  () => { flushStats(); process.exit(0); });
-function getClientIp(req) {
-  const xff = req.headers['x-forwarded-for'];
-  if (xff) return xff.split(',')[0].trim();
-  return req.socket.remoteAddress || 'unknown';
-}
-function bumpStats(req) {
-  const ip = getClientIp(req);
-  const now = Date.now();
-  const last = recentIps.get(ip) || 0;
-  if (now - last < VISIT_COOLDOWN) {
-    // 冷却期内：不计入新访问，仅返回当前计数（避免同一人反复刷新/多标签虚高）
-    return { total: stats.total, today: stats.today, date: stats.date, counted: false };
-  }
-  recentIps.set(ip, now);
-  const t = todayStr();
-  if (stats.date !== t) { stats.date = t; stats.today = 0; }
-  stats.total += 1;
-  stats.today += 1;
-  saveStats();
-  return { total: stats.total, today: stats.today, date: stats.date, counted: true };
-}
-// 定时清理过期 IP 记录，避免内存无限增长（仅保留 24h 内的去重状态）
-setInterval(() => {
-  const cutoff = Date.now() - 24 * 60 * 60 * 1000;
-  for (const [ip, ts] of recentIps) if (ts < cutoff) recentIps.delete(ip);
-}, 60 * 60 * 1000);
 
 function sendError(res, code, msg) {
   res.writeHead(code, { 'Content-Type': 'application/json' });
@@ -255,18 +206,6 @@ const server = http.createServer(async (req, res) => {
     }));
     res.writeHead(200, { 'Content-Type': 'application/json' });
     return res.end(JSON.stringify({ providers: list }));
-  }
-
-  // —— 轻量访问统计接口 ——
-  if (req.method === 'POST' && pathname === '/api/track') {
-    const r = bumpStats(req);
-    res.writeHead(200, { 'Content-Type': 'application/json' });
-    return res.end(JSON.stringify(r));
-  }
-  if (req.method === 'GET' && pathname === '/api/stats') {
-    if (stats.date !== todayStr()) { stats.date = todayStr(); stats.today = 0; }
-    res.writeHead(200, { 'Content-Type': 'application/json' });
-    return res.end(JSON.stringify({ total: stats.total, today: stats.today, date: stats.date }));
   }
 
   // 静态文件
