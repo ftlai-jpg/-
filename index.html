@@ -700,7 +700,8 @@
       line-height: 1.6;
     }
 
-    .ta-actions { display: flex; justify-content: flex-end; gap: 6px; flex-wrap: wrap; margin-bottom: 6px; }
+    .ta-actions { display: flex; justify-content: flex-end; align-items: center; gap: 6px; flex-wrap: wrap; margin-bottom: 6px; }
+    .ta-sep { width: 1px; align-self: stretch; min-height: 22px; background: var(--border); margin: 0 2px; }
     .photo-btn {
       font-size: 12px; padding: 5px 12px; border-radius: 18px;
       border: 1px solid var(--border); background: var(--surface); color: var(--text-secondary);
@@ -1605,9 +1606,10 @@
   </div>
 </div>
 
-<!-- 本地解析库（离线可用）：Excel/CSV → SheetJS；Word(.docx) → mammoth -->
+<!-- 本地解析库（离线可用）：Excel/CSV → SheetJS；Word/PDF → mammoth + pdf.js -->
 <script src="assets/vendor/xlsx.full.min.js"></script>
 <script src="assets/vendor/mammoth.browser.min.js"></script>
+<script src="assets/vendor/pdf.min.js"></script>
 <script>
 // ===== 工具分类配置 =====
 const CATEGORIES = [
@@ -2692,12 +2694,17 @@ function openTool(toolId, prefill) {
     if (field.type === 'textarea') {
       const fn = field.name;
       const ups = getUploadTypes(field);
+      const photoUps = ups.filter(t => t === 'image');
+      const fileUps  = ups.filter(t => t !== 'image');
       let actions = '', inputs = '';
-      ups.forEach(function (t) {
+      function renderUp(t) {
         const m = UPLOAD_META[t];
         actions += '<button type="button" class="photo-btn" onclick="document.getElementById(\'up-' + fn + '-' + t + '\').click()">' + m.icon + ' ' + m.label + '</button>';
         inputs += '<input type="file" accept="' + m.accept + '"' + (m.capture ? ' capture="' + m.capture + '"' : '') + ' id="up-' + fn + '-' + t + '" style="display:none" onchange="handleUpload(event,\'' + fn + '\',\'' + t + '\')">';
-      });
+      }
+      photoUps.forEach(renderUp);
+      if (photoUps.length && fileUps.length) actions += '<span class="ta-sep"></span>';
+      fileUps.forEach(renderUp);
       formHtml += '<div class="form-group"><label class="form-label">' + field.label + ' ' + requiredMark + '</label>'
         + (ups.length ? '<div class="ta-actions">' + actions + '</div>' : '')
         + '<textarea class="form-textarea" id="ta-' + fn + '" name="' + fn + '" placeholder="' + (field.placeholder || '') + '"></textarea>'
@@ -3026,24 +3033,31 @@ async function ocrImage(dataUrl, mimeType) {
   if (!res.ok) throw new Error(d.error?.message || ('HTTP ' + res.status));
   return d.choices?.[0]?.message?.content || '';
 }
-// ===== 个性化上传：按字段语义自动选择上传方式 =====
-// 支持类型：image(拍照/传图 OCR) · excel(上传 Excel/CSV) · word(上传 Word .docx)
+// ===== 个性化上传：每种输入能力相互独立、互不重叠 =====
+// 三类上传能力（按钮各自独立、不合并）：
+//   image(拍照/传图 OCR) · excel(上传 Excel/CSV) · doc(上传 Word/PDF 并提取文字)
 const UPLOAD_META = {
   image: { icon: '📷', label: '拍照/传图', accept: 'image/*', capture: 'environment' },
   excel: { icon: '📊', label: '上传Excel', accept: '.xlsx,.xls,.csv' },
-  word:  { icon: '📄', label: '上传Word', accept: '.docx,.doc' },
+  doc:   { icon: '📄', label: '上传Word/PDF', accept: '.docx,.doc,.pdf' },
 };
+// pdf.js 离线解析 PDF 文字：指定本地 worker（与页面同源）
+if (typeof pdfjsLib !== 'undefined') {
+  try { pdfjsLib.GlobalWorkerOptions.workerSrc = 'assets/vendor/pdf.worker.min.js'; } catch (e) {}
+}
 
-// 自动推断某字段该挂哪种上传（可被 field.upload 显式覆盖）
+// 自动推断某字段该挂哪些上传能力（可被 field.upload 显式覆盖）。
+// 三类能力相互独立、不合并：image(拍照/传图) / excel(上传Excel) / doc(上传Word/PDF)。
+// 成绩/数据类 → 仅 Excel（已确认细化，不混入拍照或文档）；
+// 其余文本字段 → 拍照 OCR 与 上传Word/PDF 作为两个独立按钮并存（分开、不重叠）。
 function getUploadTypes(field) {
   if (field.upload) return Array.isArray(field.upload) ? field.upload : [field.upload];
   const label = field.label || '';
-  // 成绩 / 数据类 → Excel
-  if (field.name === 'data' || /成绩|分数|数据|错题库|错题|学情|班级|得分|统计/.test(label)) return ['excel'];
-  // 教案 / 文档 / 试卷 / 大纲 / 逐字稿 / 学案类 → Word
-  if (/教案|ppt|大纲|逐字稿|试卷|学案|文档|原文|作品|词汇表|markdown|备课初稿|公开课|评课|磨课/.test(label)) return ['word'];
-  // 其余（语篇 / 课文 / 作文 / 原题等）→ 拍照 OCR
-  return ['image'];
+  const name = field.name || '';
+  // 成绩 / 数据类：仅上传 Excel（细化确认，不让拍照/文档混入）
+  if (name === 'data' || /成绩|分数|数据|错题库|错题|学情|班级|得分|统计|名次|排名/.test(label)) return ['excel'];
+  // 其余文本字段：拍照识别 与 上传Word/PDF 为两个独立按钮并存
+  return ['image', 'doc'];
 }
 
 function fillTextarea(ta, text, toastMsg, append) {
@@ -3076,6 +3090,21 @@ async function parseWord(buf) {
   return text;
 }
 
+// 本地用 pdf.js 提取 PDF 文字（离线、同域 worker）。扫描件/图片型 PDF 提取为空时提示改用拍照。
+async function parsePDF(buf) {
+  if (typeof pdfjsLib === 'undefined') throw new Error('PDF 解析库未加载，请刷新页面');
+  const pdf = await pdfjsLib.getDocument({ data: new Uint8Array(buf) }).promise;
+  const pages = [];
+  for (let p = 1; p <= pdf.numPages; p++) {
+    const page = await pdf.getPage(p);
+    const content = await page.getTextContent();
+    pages.push(content.items.map(it => it.str).join(' '));
+  }
+  const text = pages.join('\n\n').replace(/\n{3,}/g, '\n\n').trim();
+  if (!text) throw new Error('未能从 PDF 提取文字（若为扫描件/图片型 PDF，请用「拍照/传图」识别）');
+  return text;
+}
+
 async function handleUpload(event, fieldName, type) {
   const file = event.target.files && event.target.files[0];
   event.target.value = '';
@@ -3092,10 +3121,17 @@ async function handleUpload(event, fieldName, type) {
       showToast('正在解析 ' + file.name + ' …');
       const text = parseExcel(await file.arrayBuffer());
       fillTextarea(ta, text, '✅ Excel 已解析并填入');
-    } else if (type === 'word') {
-      showToast('正在解析 ' + file.name + ' …');
-      const text = await parseWord(await file.arrayBuffer());
-      fillTextarea(ta, text, '✅ Word 已解析并填入');
+    } else if (type === 'doc') {
+      const lower = (file.name || '').toLowerCase();
+      if (lower.endsWith('.pdf')) {
+        showToast('正在提取 PDF 文字…');
+        const text = await parsePDF(await file.arrayBuffer());
+        fillTextarea(ta, text, '✅ PDF 文字已提取并填入');
+      } else {
+        showToast('正在解析 ' + file.name + ' …');
+        const text = await parseWord(await file.arrayBuffer());
+        fillTextarea(ta, text, '✅ Word 已解析并填入');
+      }
     }
   } catch (e) {
     showToast('❌ 解析失败：' + (e.message || '请重试，或改用复制粘贴'));
