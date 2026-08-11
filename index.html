@@ -700,6 +700,15 @@
       line-height: 1.6;
     }
 
+    .ta-actions { display: flex; justify-content: flex-end; margin-bottom: 6px; }
+    .photo-btn {
+      font-size: 12px; padding: 5px 12px; border-radius: 18px;
+      border: 1px solid var(--border); background: var(--surface); color: var(--text-secondary);
+      cursor: pointer; transition: var(--transition);
+    }
+    .photo-btn:hover { background: var(--primary-bg); color: var(--primary); border-color: var(--primary); }
+    .photo-btn:active { transform: scale(0.97); }
+
     .form-hint {
       font-size: 12px;
       color: var(--text-muted);
@@ -763,6 +772,8 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 10px;
       margin-bottom: 12px;
     }
 
@@ -770,7 +781,9 @@
       font-size: 14px;
       font-weight: 600;
       color: var(--primary);
+      flex-shrink: 0;
     }
+    .result-actions { margin-left: auto; display: flex; gap: 8px; flex-wrap: wrap; }
 
     .result-content {
       font-size: 14px;
@@ -2674,7 +2687,12 @@ function openTool(toolId, prefill) {
   formConfig.forEach(field => {
     const requiredMark = field.required ? '<span class="required">*</span>' : '';
     if (field.type === 'textarea') {
-      formHtml += '<div class="form-group"><label class="form-label">' + field.label + ' ' + requiredMark + '</label><textarea class="form-textarea" name="' + field.name + '" placeholder="' + (field.placeholder || '') + '"></textarea></div>';
+      const fn = field.name;
+      formHtml += '<div class="form-group"><label class="form-label">' + field.label + ' ' + requiredMark + '</label>'
+        + '<div class="ta-actions"><button type="button" class="photo-btn" onclick="document.getElementById(\'ph-' + fn + '\').click()">📷 拍照 / 上传语篇</button></div>'
+        + '<textarea class="form-textarea" id="ta-' + fn + '" name="' + fn + '" placeholder="' + (field.placeholder || '') + '"></textarea>'
+        + '<input type="file" accept="image/*" capture="environment" id="ph-' + fn + '" style="display:none" onchange="handlePhoto(event,\'' + fn + '\')">'
+        + '</div>';
     } else if (field.type === 'select') {
       const options = field.options.map(o => '<option value="' + o + '">' + o + '</option>').join('');
       formHtml += '<div class="form-group"><label class="form-label">' + field.label + ' ' + requiredMark + '</label><select class="form-select" name="' + field.name + '">' + options + '</select></div>';
@@ -2682,7 +2700,11 @@ function openTool(toolId, prefill) {
       formHtml += '<div class="form-group"><label class="form-label">' + field.label + ' ' + requiredMark + '</label><input type="text" class="form-input" name="' + field.name + '" placeholder="' + (field.placeholder || '') + '" value="' + (field.value || '') + '"></div>';
     }
   });
-  formHtml += '<div class="result-area" id="resultArea"><div class="result-header"><span class="result-title">生成结果</span><button class="btn btn-secondary" style="padding:6px 14px;font-size:13px;" onclick="copyResult()">📋 复制</button></div><div class="result-content" id="resultContent"></div></div>';
+  formHtml += '<div class="result-area" id="resultArea"><div class="result-header"><span class="result-title">生成结果</span><div class="result-actions">'
+    + '<button class="btn btn-secondary" style="padding:6px 14px;font-size:13px;" onclick="copyResult()">📋 复制</button>'
+    + '<button class="btn btn-secondary" style="padding:6px 14px;font-size:13px;" onclick="exportWord()">📝 Word</button>'
+    + '<button class="btn btn-secondary" style="padding:6px 14px;font-size:13px;" onclick="exportPDF()">📄 PDF</button>'
+    + '</div></div><div class="result-content" id="resultContent"></div></div>';
   body.innerHTML = formHtml;
   if (prefill) {
     formConfig.forEach(field => {
@@ -2894,6 +2916,124 @@ function generateMockResult(tool, formData) {
 function copyResult() {
   const content = document.getElementById('resultContent').innerText;
   navigator.clipboard.writeText(content).then(() => showToast('已复制到剪贴板')).catch(() => showToast('复制失败，请手动选择文本复制'));
+}
+
+function sanitizeFilename(name) {
+  return (name || '教学方案').replace(/[\\/:*?"<>|]/g, '_').replace(/\s+/g, '_').slice(0, 60);
+}
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+function downloadBlob(blob, filename) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click();
+  setTimeout(() => { URL.revokeObjectURL(url); a.remove(); }, 1000);
+}
+function exportWord() {
+  const rc = document.getElementById('resultContent');
+  if (!rc || !rc.innerText.trim()) { showToast('暂无可导出的结果'); return; }
+  const toolName = (state.currentTool && state.currentTool.name) || '教学方案';
+  const fn = sanitizeFilename(toolName);
+  const styles = '<style>body{font-family:"Microsoft YaHei","SimSun","Songti SC","Noto Sans CJK SC",serif;font-size:14px;line-height:1.8;color:#1a1a2e;white-space:pre-wrap;}h1{font-size:22px;margin:16px 0 10px;border-bottom:2px solid #2e5e8c;padding-bottom:6px;}h2{font-size:18px;color:#2e5e8c;margin:14px 0 8px;}h3{font-size:16px;margin:12px 0 6px;}h4{font-size:14px;margin:10px 0 6px;}p{margin:8px 0;}ul,ol{margin:8px 0;padding-left:24px;}table{border-collapse:collapse;width:100%;margin:10px 0;}td,th{border:1px solid #bbb;padding:6px 8px;font-size:13px;}th{background:#eef3f8;}blockquote{margin:10px 0;padding:8px 14px;background:#f7f9fc;border-left:3px solid #2e5e8c;color:#444;}code{background:#f4f4f4;padding:1px 4px;border-radius:3px;}pre{background:#f4f4f4;padding:10px;border-radius:6px;overflow:auto;white-space:pre-wrap;}hr{border:none;border-top:1px solid #ddd;margin:14px 0;}img{max-width:100%;}</style>';
+  const full = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="utf-8"><title>' + escapeHtml(toolName) + '</title>' + styles + '</head><body>' + rc.innerHTML + '</body></html>';
+  const blob = new Blob(['﻿' + full], { type: 'application/msword' });
+  downloadBlob(blob, fn + '.doc');
+  showToast('已导出 Word 文档');
+}
+function exportPDF() {
+  const rc = document.getElementById('resultContent');
+  if (!rc || !rc.innerText.trim()) { showToast('暂无可导出的结果'); return; }
+  const toolName = (state.currentTool && state.currentTool.name) || '教学方案';
+  const w = window.open('', '_blank');
+  if (!w) { showToast('浏览器拦截了弹窗，请允许本站点弹窗后重试'); return; }
+  const styles = '<style>@page{margin:16mm;}body{font-family:"Microsoft YaHei","SimSun","Songti SC","Noto Sans CJK SC",serif;font-size:14px;line-height:1.8;color:#1a1a2e;white-space:pre-wrap;}h1{font-size:22px;margin:16px 0 10px;border-bottom:2px solid #2e5e8c;padding-bottom:6px;}h2{font-size:18px;color:#2e5e8c;margin:14px 0 8px;}h3{font-size:16px;margin:12px 0 6px;}h4{font-size:14px;margin:10px 0 6px;}p{margin:8px 0;}ul,ol{margin:8px 0;padding-left:24px;}table{border-collapse:collapse;width:100%;margin:10px 0;}td,th{border:1px solid #bbb;padding:6px 8px;font-size:13px;}th{background:#eef3f8;}blockquote{margin:10px 0;padding:8px 14px;background:#f7f9fc;border-left:3px solid #2e5e8c;color:#444;}code{background:#f4f4f4;padding:1px 4px;border-radius:3px;}pre{background:#f4f4f4;padding:10px;border-radius:6px;overflow:auto;white-space:pre-wrap;}hr{border:none;border-top:1px solid #ddd;margin:14px 0;}img{max-width:100%;}</style>';
+  w.document.write('<!DOCTYPE html><html><head><meta charset="utf-8"><title>' + escapeHtml(toolName) + '</title>' + styles + '</head><body><h1>' + escapeHtml(toolName) + '</h1>' + rc.innerHTML + '</body></html>');
+  w.document.close();
+  setTimeout(() => { try { w.focus(); w.print(); } catch (e) {} }, 500);
+  showToast('已打开打印窗口，选择「另存为 PDF」即可');
+}
+function readFile(file) {
+  return new Promise((resolve, reject) => {
+    const r = new FileReader();
+    r.onload = () => resolve(r.result);
+    r.onerror = () => reject(new Error('图片读取失败'));
+    r.readAsDataURL(file);
+  });
+}
+function downscaleImage(dataUrl, maxW, quality) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      let w = img.width, h = img.height;
+      if (w > maxW) { h = Math.round(h * maxW / w); w = maxW; }
+      const canvas = document.createElement('canvas');
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      resolve(canvas.toDataURL('image/jpeg', quality));
+    };
+    img.onerror = () => reject(new Error('图片解码失败'));
+    img.src = dataUrl;
+  });
+}
+const OCR_SYSTEM = '你是一个严谨的 OCR 文字识别引擎。请识别图片中的全部文字，按原排版（段落、换行、列表、表格）如实输出，不要改写、补充或翻译。中英文混合时同时保留原文。仅输出识别到的文本本身。';
+const OCR_PROMPT = '请识别这张图片里的文字并原样输出：';
+async function ocrImage(dataUrl, mimeType) {
+  const visionMessages = [
+    { role: 'system', content: OCR_SYSTEM },
+    { role: 'user', content: [{ type: 'text', text: OCR_PROMPT }, { type: 'image_url', image_url: { url: dataUrl } }] }
+  ];
+  if (apiConfig.provider === 'gemini') {
+    if (apiConfig.cloudProxy) throw new Error('Gemini 云端代理模式暂不支持图片识别，请改用支持视觉的模型（如 GPT-4o）或改用本地代理模式');
+    const b64 = dataUrl.split(',')[1];
+    const body = { contents: [{ role: 'user', parts: [{ text: OCR_PROMPT }, { inline_data: { mime_type: mimeType || 'image/jpeg', data: b64 } }] }], generationConfig: { temperature: 0.1, maxOutputTokens: 4000 } };
+    const url = apiConfig.endpoint.replace(/\/+$/, '') + '/' + apiConfig.model + ':generateContent?key=' + encodeURIComponent(apiConfig.apiKey);
+    const res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+    const d = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(d.error?.message || ('HTTP ' + res.status));
+    return d.candidates?.[0]?.content?.parts?.[0]?.text || '';
+  }
+  if (apiConfig.cloudProxy) {
+    if (!apiConfig.cloudProxyUrl) throw new Error('未配置云端代理地址');
+    const base = apiConfig.cloudProxyUrl.replace(/\/+$/, '');
+    const res = await fetch(base + '/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ provider: apiConfig.provider, model: apiConfig.model, system: OCR_SYSTEM, messages: visionMessages, temperature: 0.1, max_tokens: 4000 }) });
+    if (!res.ok) { const d = await res.json().catch(() => ({})); throw new Error(d.error?.message || ('HTTP ' + res.status)); }
+    const data = await res.json().catch(() => ({}));
+    return data.content || '';
+  }
+  if (apiConfig.useProxy) {
+    const base = getProxyBase();
+    const res = await fetch(base + '/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ endpoint: apiConfig.endpoint, apiKey: apiConfig.apiKey, provider: apiConfig.provider, model: apiConfig.model, system: OCR_SYSTEM, messages: visionMessages, temperature: 0.1, max_tokens: 4000 }) });
+    if (!res.ok) { const d = await res.json().catch(() => ({})); throw new Error(d.error?.message || d.message || ('HTTP ' + res.status)); }
+    const data = await res.json().catch(() => ({}));
+    return data.content || '';
+  }
+  // 浏览器直连（OpenAI 兼容）
+  const body = { model: apiConfig.model, messages: visionMessages, temperature: 0.1, max_tokens: 4000 };
+  const res = await fetch(apiConfig.endpoint.replace(/\/+$/, '') + '/chat/completions', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + apiConfig.apiKey }, body: JSON.stringify(body) });
+  const d = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(d.error?.message || ('HTTP ' + res.status));
+  return d.choices?.[0]?.message?.content || '';
+}
+async function handlePhoto(event, fieldName) {
+  const file = event.target.files && event.target.files[0];
+  event.target.value = '';
+  if (!file) return;
+  if (!isApiConfigured()) { showToast('请先在右上角 ⚙️ 配置支持视觉的模型（如 GPT-4o）后再使用拍照识别'); return; }
+  try {
+    showToast('正在识别图片中的文字…');
+    const dataUrl = await downscaleImage(await readFile(file), 1600, 0.85);
+    const text = await ocrImage(dataUrl, file.type);
+    const ta = document.getElementById('ta-' + fieldName) || document.querySelector('[name="' + fieldName + '"]');
+    if (ta) {
+      ta.value = (ta.value ? ta.value + '\n\n' : '') + text.trim();
+      ta.dispatchEvent(new Event('input'));
+    }
+    showToast('✅ 识别完成，已填入语篇');
+  } catch (e) {
+    showToast('❌ 识别失败：' + (e.message || '请重试，或换用复制粘贴'));
+  }
 }
 
 function showToast(message) {
