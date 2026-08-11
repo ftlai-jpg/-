@@ -700,7 +700,7 @@
       line-height: 1.6;
     }
 
-    .ta-actions { display: flex; justify-content: flex-end; margin-bottom: 6px; }
+    .ta-actions { display: flex; justify-content: flex-end; gap: 6px; flex-wrap: wrap; margin-bottom: 6px; }
     .photo-btn {
       font-size: 12px; padding: 5px 12px; border-radius: 18px;
       border: 1px solid var(--border); background: var(--surface); color: var(--text-secondary);
@@ -1605,6 +1605,9 @@
   </div>
 </div>
 
+<!-- 本地解析库（离线可用）：Excel/CSV → SheetJS；Word(.docx) → mammoth -->
+<script src="assets/vendor/xlsx.full.min.js"></script>
+<script src="assets/vendor/mammoth.browser.min.js"></script>
 <script>
 // ===== 工具分类配置 =====
 const CATEGORIES = [
@@ -2688,10 +2691,17 @@ function openTool(toolId, prefill) {
     const requiredMark = field.required ? '<span class="required">*</span>' : '';
     if (field.type === 'textarea') {
       const fn = field.name;
+      const ups = getUploadTypes(field);
+      let actions = '', inputs = '';
+      ups.forEach(function (t) {
+        const m = UPLOAD_META[t];
+        actions += '<button type="button" class="photo-btn" onclick="document.getElementById(\'up-' + fn + '-' + t + '\').click()">' + m.icon + ' ' + m.label + '</button>';
+        inputs += '<input type="file" accept="' + m.accept + '"' + (m.capture ? ' capture="' + m.capture + '"' : '') + ' id="up-' + fn + '-' + t + '" style="display:none" onchange="handleUpload(event,\'' + fn + '\',\'' + t + '\')">';
+      });
       formHtml += '<div class="form-group"><label class="form-label">' + field.label + ' ' + requiredMark + '</label>'
-        + '<div class="ta-actions"><button type="button" class="photo-btn" onclick="document.getElementById(\'ph-' + fn + '\').click()">📷 拍照 / 上传语篇</button></div>'
+        + (ups.length ? '<div class="ta-actions">' + actions + '</div>' : '')
         + '<textarea class="form-textarea" id="ta-' + fn + '" name="' + fn + '" placeholder="' + (field.placeholder || '') + '"></textarea>'
-        + '<input type="file" accept="image/*" capture="environment" id="ph-' + fn + '" style="display:none" onchange="handlePhoto(event,\'' + fn + '\')">'
+        + inputs
         + '</div>';
     } else if (field.type === 'select') {
       const options = field.options.map(o => '<option value="' + o + '">' + o + '</option>').join('');
@@ -3016,23 +3026,79 @@ async function ocrImage(dataUrl, mimeType) {
   if (!res.ok) throw new Error(d.error?.message || ('HTTP ' + res.status));
   return d.choices?.[0]?.message?.content || '';
 }
-async function handlePhoto(event, fieldName) {
+// ===== 个性化上传：按字段语义自动选择上传方式 =====
+// 支持类型：image(拍照/传图 OCR) · excel(上传 Excel/CSV) · word(上传 Word .docx)
+const UPLOAD_META = {
+  image: { icon: '📷', label: '拍照/传图', accept: 'image/*', capture: 'environment' },
+  excel: { icon: '📊', label: '上传Excel', accept: '.xlsx,.xls,.csv' },
+  word:  { icon: '📄', label: '上传Word', accept: '.docx,.doc' },
+};
+
+// 自动推断某字段该挂哪种上传（可被 field.upload 显式覆盖）
+function getUploadTypes(field) {
+  if (field.upload) return Array.isArray(field.upload) ? field.upload : [field.upload];
+  const label = field.label || '';
+  // 成绩 / 数据类 → Excel
+  if (field.name === 'data' || /成绩|分数|数据|错题库|错题|学情|班级|得分|统计/.test(label)) return ['excel'];
+  // 教案 / 文档 / 试卷 / 大纲 / 逐字稿 / 学案类 → Word
+  if (/教案|ppt|大纲|逐字稿|试卷|学案|文档|原文|作品|词汇表|markdown|备课初稿|公开课|评课|磨课/.test(label)) return ['word'];
+  // 其余（语篇 / 课文 / 作文 / 原题等）→ 拍照 OCR
+  return ['image'];
+}
+
+function fillTextarea(ta, text, toastMsg, append) {
+  if (!ta) return;
+  const v = (text || '').trim();
+  ta.value = (append && ta.value) ? ta.value + '\n\n' + v : v;
+  ta.dispatchEvent(new Event('input'));
+  if (toastMsg) showToast(toastMsg);
+}
+
+function parseExcel(buf) {
+  if (typeof XLSX === 'undefined') throw new Error('Excel 解析库未加载，请刷新页面');
+  const wb = XLSX.read(buf, { type: 'array' });
+  const out = [];
+  wb.SheetNames.forEach(function (name) {
+    const ws = wb.Sheets[name];
+    const rows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '', raw: false });
+    if (wb.SheetNames.length > 1) out.push('【' + name + '】');
+    rows.forEach(function (r) { if (Array.isArray(r)) out.push(r.join('\t')); });
+    out.push('');
+  });
+  return out.join('\n').trim();
+}
+
+async function parseWord(buf) {
+  if (typeof mammoth === 'undefined') throw new Error('Word 解析库未加载，请刷新页面');
+  const res = await mammoth.extractRawText({ arrayBuffer: buf });
+  const text = (res && res.value) || '';
+  if (!text.trim()) throw new Error('未能从文档提取文字（仅支持 .docx；旧版 .doc 请另存为 .docx 后重试）');
+  return text;
+}
+
+async function handleUpload(event, fieldName, type) {
   const file = event.target.files && event.target.files[0];
   event.target.value = '';
   if (!file) return;
-  if (!isApiConfigured()) { showToast('请先在右上角 ⚙️ 配置支持视觉的模型（如 GPT-4o）后再使用拍照识别'); return; }
+  const ta = document.getElementById('ta-' + fieldName) || document.querySelector('[name="' + fieldName + '"]');
   try {
-    showToast('正在识别图片中的文字…');
-    const dataUrl = await downscaleImage(await readFile(file), 1600, 0.85);
-    const text = await ocrImage(dataUrl, file.type);
-    const ta = document.getElementById('ta-' + fieldName) || document.querySelector('[name="' + fieldName + '"]');
-    if (ta) {
-      ta.value = (ta.value ? ta.value + '\n\n' : '') + text.trim();
-      ta.dispatchEvent(new Event('input'));
+    if (type === 'image') {
+      if (!isApiConfigured()) { showToast('请先在右上角 ⚙️ 配置支持视觉的模型（如 GPT-4o）后再用拍照识别'); return; }
+      showToast('正在识别图片中的文字…');
+      const dataUrl = await downscaleImage(await readFile(file), 1600, 0.85);
+      const text = await ocrImage(dataUrl, file.type);
+      fillTextarea(ta, text, '✅ 识别完成，已填入语篇', true);
+    } else if (type === 'excel') {
+      showToast('正在解析 ' + file.name + ' …');
+      const text = parseExcel(await file.arrayBuffer());
+      fillTextarea(ta, text, '✅ Excel 已解析并填入');
+    } else if (type === 'word') {
+      showToast('正在解析 ' + file.name + ' …');
+      const text = await parseWord(await file.arrayBuffer());
+      fillTextarea(ta, text, '✅ Word 已解析并填入');
     }
-    showToast('✅ 识别完成，已填入语篇');
   } catch (e) {
-    showToast('❌ 识别失败：' + (e.message || '请重试，或换用复制粘贴'));
+    showToast('❌ 解析失败：' + (e.message || '请重试，或改用复制粘贴'));
   }
 }
 
