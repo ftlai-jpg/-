@@ -2347,6 +2347,15 @@ const TOOLS = [
     "version": "v1.1"
   },
   {
+    "id": "book-notes",
+    "cat": "selfstudy",
+    "icon": "📔",
+    "name": "读书笔记",
+    "tags": "章节要点 金句摘录 概念地图 阅读笔记 自主研读",
+    "desc": "上传一本书（Word/PDF/TXT）或粘贴章节文本，AI按章节提炼内容重点，生成结构化读书笔记：每章主旨、关键内容与论证、金句摘录、概念卡与可迁移启发；可按侧重点定制，便于自学复习或教师二次加工。",
+    "version": "v1.0"
+  },
+  {
     "id": "active-reading",
     "cat": "reading",
     "icon": "💡",
@@ -2432,6 +2441,12 @@ const TOOL_FORMS = {
     { label: '意向专业/方向（选填）', type: 'input', name: 'major', placeholder: '如：计算机、电子信息、临床医学' },
     { label: '更看重', type: 'select', name: 'priority', options: ['学校层次', '专业实力', '所在城市', '就业前景'], required: true },
     { label: '补充说明（选填）', type: 'input', name: 'note', placeholder: '如：家庭经济情况、是否接受调剂等' },
+  ],
+  'book-notes': [
+    { label: '书籍内容', type: 'textarea', name: 'book', upload: ['doc'], placeholder: '上传 Word/PDF/TXT 书籍文档，或直接粘贴书籍全文或需要讲解的章节文本…', required: true },
+    { label: '书名 / 作者（选填）', type: 'input', name: 'title', placeholder: '如：《活着》余华（帮助校准笔记语气与背景）' },
+    { label: '笔记侧重点', type: 'select', name: 'focus', options: ['章节要点提炼', '每章：要点 + 金句 + 思考题', '概念地图与知识骨架', '可迁移的教学/写作素材'], required: true },
+    { label: '补充说明（选填）', type: 'input', name: 'note', placeholder: '如：面向高中生、需中英对照、重点看人物塑造…' },
   ],
 };
 
@@ -3213,7 +3228,7 @@ async function ocrImage(dataUrl, mimeType) {
 const UPLOAD_META = {
   image: { icon: '📷', label: '拍照/传图', accept: 'image/*', capture: 'environment' },
   excel: { icon: '📊', label: '上传Excel', accept: '.xlsx,.xls,.csv' },
-  doc:   { icon: '📄', label: '上传Word/PDF', accept: '.docx,.doc,.pdf' },
+  doc:   { icon: '📄', label: '上传Word/PDF/TXT', accept: '.docx,.pdf,.txt' },
 };
 // pdf.js 离线解析 PDF 文字：指定本地 worker（与页面同源）
 if (typeof pdfjsLib !== 'undefined') {
@@ -3301,6 +3316,10 @@ async function handleUpload(event, fieldName, type) {
         showToast('正在提取 PDF 文字…');
         const text = await parsePDF(await file.arrayBuffer());
         fillTextarea(ta, text, '✅ PDF 文字已提取并填入');
+      } else if (lower.endsWith('.txt')) {
+        showToast('正在读入 ' + file.name + ' …');
+        const text = await file.text();
+        fillTextarea(ta, text, '✅ 文本已读入并填入');
       } else {
         showToast('正在解析 ' + file.name + ' …');
         const text = await parseWord(await file.arrayBuffer());
