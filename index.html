@@ -1617,6 +1617,7 @@
 <script src="assets/vendor/xlsx.full.min.js"></script>
 <script src="assets/vendor/mammoth.browser.min.js"></script>
 <script src="assets/vendor/pdf.min.js"></script>
+<script src="assets/vendor/pptxgen.bundle.min.js"></script>
 <script>
 // ===== 工具分类配置 =====
 const CATEGORIES = [
@@ -2448,6 +2449,7 @@ const state = {
   favorites: JSON.parse(localStorage.getItem('teaching_favorites') || '[]'),
   history: JSON.parse(localStorage.getItem('teaching_history') || '[]'),
   currentTool: null,
+  lastRaw: '',   // 最近一次工具返回的「原始文本」（含 ```json 结构化块），供 PPT 生成消费
   // 左侧可折叠索引：默认全部折叠，点击分类标题展开
   expandedCats: new Set(),
 };
@@ -2724,10 +2726,12 @@ function openTool(toolId, prefill) {
       formHtml += '<div class="form-group"><label class="form-label">' + field.label + ' ' + requiredMark + '</label><input type="text" class="form-input" name="' + field.name + '" placeholder="' + (field.placeholder || '') + '" value="' + (field.value || '') + '"></div>';
     }
   });
+  const isPaper = tool.id === 'paper-visual-explain';
   formHtml += '<div class="result-area" id="resultArea"><div class="result-header"><span class="result-title">生成结果</span><div class="result-actions">'
     + '<button class="btn btn-secondary" style="padding:6px 14px;font-size:13px;" onclick="copyResult()">📋 复制</button>'
     + '<button class="btn btn-secondary" style="padding:6px 14px;font-size:13px;" onclick="exportWord()">📝 Word</button>'
     + '<button class="btn btn-secondary" style="padding:6px 14px;font-size:13px;" onclick="exportPDF()">📄 PDF</button>'
+    + (isPaper ? '<button class="btn btn-secondary" style="padding:6px 14px;font-size:13px;" onclick="exportPPT()">📊 课堂PPT</button>' : '')
     + '</div></div><div class="result-content" id="resultContent"></div></div>';
   body.innerHTML = formHtml;
   if (prefill) {
@@ -2895,7 +2899,10 @@ async function runTool() {
 
   try {
     const aiResult = await callAiApi(systemPrompt, userContent);
-    resultContent.innerHTML = renderMarkdown(aiResult);
+    state.lastRaw = aiResult;  // 保留原始文本（含结构化 JSON 块）供 PPT 生成
+    // 展示时剥离 ```json 机器数据块，避免污染阅读视图
+    const display = aiResult.replace(/```json[\s\S]*?```/gi, '').replace(/```JSON[\s\S]*?```/gi, '');
+    resultContent.innerHTML = renderMarkdown(display);
     runBtn.disabled = false;
     runBtn.style.opacity = '1';
     runBtn.textContent = '▶ 重新运行';
@@ -2977,6 +2984,166 @@ function exportPDF() {
   w.document.close();
   setTimeout(() => { try { w.focus(); w.print(); } catch (e) {} }, 500);
   showToast('已打开打印窗口，选择「另存为 PDF」即可');
+}
+
+// ===== 试卷课堂讲解 PPT 生成（仅「试卷可视化讲解」工具）=====
+const PPT_FONT = 'Microsoft YaHei';
+const PPT_BLUE = '2E5E8C', PPT_RED = 'C0392B', PPT_DARK = '1A1A2E', PPT_GREY = '666666';
+function extractPaperJSON(raw) {
+  const re = /```(?:json|JSON)\s*([\s\S]*?)```/g;
+  let m, best = null;
+  while ((m = re.exec(raw)) !== null) {
+    const cand = m[1].trim();
+    if (cand.length > (best ? best.length : 0)) best = cand;
+  }
+  if (!best) return null;
+  // 容错：去掉常见的尾随逗号，避免模型偶发格式问题导致解析失败
+  const cleaned = best.replace(/,(\s*[}\]])/g, '$1');
+  let obj;
+  try { obj = JSON.parse(cleaned); } catch (e) { return null; }
+  if (!obj || !Array.isArray(obj.sections)) return null;
+  return obj;
+}
+function parseMarkdownFallback(raw) {
+  const lines = raw.replace(/```[\s\S]*?```/g, '').split(/\r?\n/);
+  const sections = [];
+  let cur = null;
+  for (const ln of lines) {
+    if (/^#{2,3}\s+/.test(ln)) {
+      cur = { type: ln.replace(/^#{2,3}\s+/, '').trim(), guide: {}, fullText: '', questions: [], vocab: [] };
+      sections.push(cur);
+    } else if (cur) {
+      cur.fullText += ln + '\n';
+    } else {
+      if (!sections.length) sections.push({ type: '讲解内容', guide: {}, fullText: '', questions: [], vocab: [] });
+      sections[0].fullText += ln + '\n';
+    }
+  }
+  return { title: (state.currentTool && state.currentTool.name) || '试卷讲解', sections };
+}
+function chunkText(text, size) {
+  const out = [];
+  for (let i = 0; i < text.length; i += size) out.push(text.slice(i, i + size));
+  return out.length ? out : [''];
+}
+function pptAddTitle(slide, text, sub) {
+  slide.background = { color: 'FFFFFF' };
+  slide.addShape('rect', { x: 0, y: 0, w: 13.333, h: 0.12, fill: { color: PPT_BLUE } });
+  slide.addText(text, { x: 0.5, y: 0.28, w: 12.33, h: 0.7, fontSize: 24, bold: true, color: PPT_BLUE, fontFace: PPT_FONT, valign: 'middle' });
+  if (sub) slide.addText(sub, { x: 0.5, y: 1.0, w: 12.33, h: 0.42, fontSize: 13, color: PPT_GREY, fontFace: PPT_FONT });
+}
+function pptText(slide, text, y, opts) {
+  opts = opts || {};
+  slide.addText(text, {
+    x: opts.x != null ? opts.x : 0.6, y: y, w: opts.w != null ? opts.w : 12.1, h: opts.h != null ? opts.h : 5.6,
+    fontSize: opts.fontSize || 14, color: opts.color || PPT_DARK, fontFace: PPT_FONT,
+    valign: 'top', align: 'left', lineSpacingMultiple: 1.15, wrap: true
+  });
+}
+function buildPaperSlides(pptx, data) {
+  const cover = pptx.addSlide();
+  cover.background = { color: 'F4F7FB' };
+  cover.addShape('rect', { x: 0, y: 0, w: 13.333, h: 1.4, fill: { color: PPT_BLUE } });
+  cover.addText('试卷课堂讲解', { x: 0.6, y: 2.5, w: 12.13, h: 1.0, fontSize: 40, bold: true, color: 'FFFFFF', fontFace: PPT_FONT, align: 'center' });
+  cover.addText(data.title || '英语试卷逐题讲解', { x: 0.6, y: 3.7, w: 12.13, h: 0.8, fontSize: 22, color: PPT_DARK, fontFace: PPT_FONT, align: 'center' });
+  cover.addText('AI 教学工作台 · 教师版', { x: 0.6, y: 5.7, w: 12.13, h: 0.5, fontSize: 14, color: PPT_GREY, fontFace: PPT_FONT, align: 'center' });
+
+  data.sections.forEach(function (sec) {
+    const type = sec.type || '板块';
+    const g = sec.guide || {};
+    const gLines = [];
+    if (g.textType) gLines.push(['语篇类型', g.textType]);
+    if (g.theme) gLines.push(['主题语境', g.theme]);
+    if (g.topic) gLines.push(['话题', g.topic]);
+    if (g.source) gLines.push(['题源', g.source]);
+    if (gLines.length) {
+      const s = pptx.addSlide();
+      pptAddTitle(s, type, '语篇导学');
+      const rows = gLines.map(function (kv) {
+        return [
+          { text: kv[0], options: { bold: true, color: 'FFFFFF', fill: { color: PPT_BLUE }, fontFace: PPT_FONT, fontSize: 15, valign: 'middle' } },
+          { text: kv[1], options: { color: PPT_DARK, fontFace: PPT_FONT, fontSize: 15, valign: 'middle' } }
+        ];
+      });
+      s.addTable(rows, { x: 0.8, y: 1.7, w: 11.7, colW: [2.4, 9.3], rowH: 0.7, border: { type: 'solid', color: 'D6E0EA', pt: 1 }, valign: 'middle' });
+    }
+    if (sec.fullText && sec.fullText.trim()) {
+      const chunks = chunkText(sec.fullText.trim(), 550);
+      chunks.forEach(function (chunk, i) {
+        const s = pptx.addSlide();
+        pptAddTitle(s, type + ' · 全文' + (chunks.length > 1 ? '（' + (i + 1) + '/' + chunks.length + '）' : ''), '');
+        pptText(s, chunk, 1.5, { fontSize: 14, h: 5.6 });
+      });
+    }
+    (sec.questions || []).forEach(function (q) {
+      const s = pptx.addSlide();
+      pptAddTitle(s, type + ' · 第 ' + (q.num || '?') + ' 题', q.stem || '');
+      let y = 1.5;
+      const opts = Array.isArray(q.options) ? q.options : [];
+      if (opts.length) {
+        const ansLetter = (q.answer || '').toString().trim().replace(/\.$/, '').charAt(0).toUpperCase();
+        const rich = opts.map(function (o) {
+          const letter = (o.match(/^[A-Da-d]/) || [''])[0].toUpperCase();
+          const isAns = letter && letter === ansLetter;
+          return { text: o + '\n', options: { fontFace: PPT_FONT, fontSize: 15, color: isAns ? PPT_RED : PPT_DARK, bold: isAns } };
+        });
+        s.addText(rich, { x: 0.6, y: y, w: 12.1, h: 1.9, valign: 'top', lineSpacingMultiple: 1.1 });
+        y += 2.0;
+      }
+      if (q.answer || q.blankText) {
+        s.addText('【答案】 ' + (q.blankText || q.answer), { x: 0.6, y: y, w: 12.1, h: 0.45, fontSize: 16, bold: true, color: PPT_RED, fontFace: PPT_FONT });
+        y += 0.55;
+      }
+      if (q.analysis) {
+        s.addText('【解析】', { x: 0.6, y: y, w: 12.1, h: 0.4, fontSize: 15, bold: true, color: PPT_BLUE, fontFace: PPT_FONT });
+        y += 0.45;
+        pptText(s, q.analysis, y, { fontSize: 14, h: Math.max(0.5, 6.5 - y) });
+      }
+      if (Array.isArray(q.keyPoints) && q.keyPoints.length) {
+        s.addText('【要点】 ' + q.keyPoints.join('；'), { x: 0.6, y: y + 0.05, w: 12.1, h: 1.0, fontSize: 13, color: PPT_GREY, fontFace: PPT_FONT });
+      }
+    });
+    if (Array.isArray(sec.vocab) && sec.vocab.length) {
+      const s = pptx.addSlide();
+      pptAddTitle(s, type + ' · 重要词汇', '');
+      const rows = [[
+        { text: '单词', options: { bold: true, color: 'FFFFFF', fill: { color: PPT_BLUE }, fontFace: PPT_FONT, fontSize: 14, align: 'center' } },
+        { text: '中文释义', options: { bold: true, color: 'FFFFFF', fill: { color: PPT_BLUE }, fontFace: PPT_FONT, fontSize: 14, align: 'center' } }
+      ]];
+      sec.vocab.forEach(function (v) {
+        rows.push([
+          { text: v.en || '', options: { fontFace: PPT_FONT, fontSize: 13, valign: 'middle' } },
+          { text: v.cn || '', options: { fontFace: PPT_FONT, fontSize: 13, valign: 'middle' } }
+        ]);
+      });
+      s.addTable(rows, { x: 0.8, y: 1.6, w: 11.7, colW: [5.85, 5.85], border: { type: 'solid', color: 'D6E0EA', pt: 1 }, valign: 'middle', rowH: 0.4 });
+    }
+  });
+}
+async function exportPPT() {
+  if (typeof PptxGenJS === 'undefined') { showToast('PPT 生成库未加载，请刷新页面后重试'); return; }
+  if ((state.currentTool && state.currentTool.id) !== 'paper-visual-explain') { showToast('课堂 PPT 仅适用于「试卷可视化讲解」工具'); return; }
+  const raw = state.lastRaw || '';
+  if (!raw.trim()) { showToast('请先点击「运行工具」生成讲解，再导出 PPT'); return; }
+  showToast('正在生成课堂讲解 PPT…');
+  let data = null;
+  try { data = extractPaperJSON(raw); } catch (e) { data = null; }
+  if (!data) data = parseMarkdownFallback(raw);
+  if (!data || !Array.isArray(data.sections) || !data.sections.length) { showToast('未能解析讲解数据，无法生成 PPT'); return; }
+  try {
+    const pptx = new PptxGenJS();
+    pptx.defineLayout({ name: 'W16x9', width: 13.333, height: 7.5 });
+    pptx.layout = 'W16x9';
+    pptx.author = 'AI 教学工作台';
+    pptx.company = 'AI 教学工作台';
+    pptx.title = data.title || '试卷课堂讲解';
+    buildPaperSlides(pptx, data);
+    const fn = sanitizeFilename(data.title || (state.currentTool && state.currentTool.name) || '试卷课堂讲解');
+    await pptx.writeFile({ fileName: fn + '.pptx' });
+    showToast('已生成课堂讲解 PPT');
+  } catch (e) {
+    showToast('PPT 生成失败：' + (e && e.message ? e.message : e));
+  }
 }
 function readFile(file) {
   return new Promise((resolve, reject) => {
