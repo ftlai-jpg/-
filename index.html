@@ -1618,6 +1618,7 @@
 <script src="assets/vendor/mammoth.browser.min.js"></script>
 <script src="assets/vendor/pdf.min.js"></script>
 <script src="assets/vendor/pptxgen.bundle.min.js"></script>
+<script src="assets/vendor/html-docx.js"></script>
 <script>
 // ===== 工具分类配置 =====
 const CATEGORIES = [
@@ -2980,13 +2981,29 @@ function downloadBlob(blob, filename) {
 function exportWord() {
   const rc = document.getElementById('resultContent');
   if (!rc || !rc.innerText.trim()) { showToast('暂无可导出的结果'); return; }
+  if (typeof htmlDocx === 'undefined') { showToast('Word 生成库未加载，请刷新页面'); return; }
   const toolName = (state.currentTool && state.currentTool.name) || '教学方案';
   const fn = sanitizeFilename(toolName);
-  const styles = '<style>body{font-family:"Microsoft YaHei","SimSun","Songti SC","Noto Sans CJK SC",serif;font-size:14px;line-height:1.8;color:#1a1a2e;white-space:pre-wrap;}h1{font-size:22px;margin:16px 0 10px;border-bottom:2px solid #2e5e8c;padding-bottom:6px;}h2{font-size:18px;color:#2e5e8c;margin:14px 0 8px;}h3{font-size:16px;margin:12px 0 6px;}h4{font-size:14px;margin:10px 0 6px;}p{margin:8px 0;}ul,ol{margin:8px 0;padding-left:24px;}table{border-collapse:collapse;width:100%;margin:10px 0;}td,th{border:1px solid #bbb;padding:6px 8px;font-size:13px;}th{background:#eef3f8;}blockquote{margin:10px 0;padding:8px 14px;background:#f7f9fc;border-left:3px solid #2e5e8c;color:#444;}code{background:#f4f4f4;padding:1px 4px;border-radius:3px;}pre{background:#f4f4f4;padding:10px;border-radius:6px;overflow:auto;white-space:pre-wrap;}hr{border:none;border-top:1px solid #ddd;margin:14px 0;}img{max-width:100%;}</style>';
-  const full = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="utf-8"><title>' + escapeHtml(toolName) + '</title>' + styles + '</head><body>' + rc.innerHTML + '</body></html>';
-  const blob = new Blob(['﻿' + full], { type: 'application/msword' });
-  downloadBlob(blob, fn + '.doc');
-  showToast('已导出 Word 文档');
+  // 用原始 markdown 重新渲染（与屏幕同源），并剥离结构化 JSON 块（试卷工具会带）
+  let md = (state.lastRaw && state.lastRaw.trim()) ? state.lastRaw : (rc.innerText || '');
+  md = md.replace(/```json[\s\S]*?```/gi, '').replace(/```JSON[\s\S]*?```/gi, '');
+  let body = renderMarkdown(md);
+  // 清洗：网页 CSS 变量与深色代码块在 Word 里会错乱，替换为安全值
+  body = body
+    .replace(/var\(--border\)/g, '#bbb')
+    .replace(/background:#1e1e2e;color:#cdd6f4/g, 'background:#f4f4f4;color:#1a1a2e');
+  const html = '<!DOCTYPE html><html><head><meta charset="utf-8"><title>' + escapeHtml(toolName) + '</title>'
+    + '<style>body{font-family:"Microsoft YaHei","SimSun","Songti SC","Noto Sans CJK SC",serif;font-size:14px;line-height:1.8;color:#1a1a2e;}'
+    + 'h1,h2,h3,h4{color:#2e5e8c;}table{border-collapse:collapse;}td,th{border:1px solid #bbb;padding:6px 8px;}th{background:#eef3f8;}'
+    + 'pre{background:#f4f4f4;padding:10px;border-radius:6px;}code{background:#f4f4f4;padding:1px 4px;border-radius:3px;}</style></head>'
+    + '<body><h1>' + escapeHtml(toolName) + '</h1>' + body + '</body></html>';
+  try {
+    const blob = htmlDocx.asBlob(html);
+    downloadBlob(blob, fn + '.docx');
+    showToast('已导出 Word 文档（.docx）');
+  } catch (e) {
+    showToast('Word 生成失败：' + ((e && e.message) || '未知错误'));
+  }
 }
 function exportPDF() {
   const rc = document.getElementById('resultContent');
